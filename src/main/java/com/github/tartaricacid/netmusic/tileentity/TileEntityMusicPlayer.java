@@ -29,8 +29,11 @@ import javax.annotation.Nullable;
 
 import static com.github.tartaricacid.netmusic.block.BlockMusicPlayer.CYCLE_DISABLE;
 
+import java.util.List;
+
 public class TileEntityMusicPlayer extends BlockEntity {
-    public static final BlockEntityType<TileEntityMusicPlayer> TYPE = BlockEntityType.Builder.of(TileEntityMusicPlayer::new, InitBlocks.MUSIC_PLAYER.get()).build(null);
+    public static final BlockEntityType<TileEntityMusicPlayer> TYPE = BlockEntityType.Builder
+            .of(TileEntityMusicPlayer::new, InitBlocks.MUSIC_PLAYER.get()).build(null);
     private static final String CD_ITEM_TAG = "ItemStackCD";
     private static final String IS_PLAY_TAG = "IsPlay";
     private static final String CURRENT_TIME_TAG = "CurrentTime";
@@ -119,7 +122,8 @@ public class TileEntityMusicPlayer extends BlockEntity {
         this.setCurrentTime(info.songTime * 20 + 64);
         this.isPlay = true;
         if (level != null && !level.isClientSide) {
-            MusicToClientMessage msg = new MusicToClientMessage(worldPosition, info.songUrl, info.songTime, info.songName);
+            MusicToClientMessage msg = new MusicToClientMessage(worldPosition, info.songUrl, info.songTime,
+                    info.songName);
             NetworkHandler.sendToNearby(level, worldPosition, msg);
         }
     }
@@ -169,15 +173,49 @@ public class TileEntityMusicPlayer extends BlockEntity {
             if (blockState.getValue(CYCLE_DISABLE)) {
                 te.setPlay(false);
                 te.markDirty();
-            } else {
-                ItemStack stackInSlot = te.getPlayerInv().getStackInSlot(0);
-                if (stackInSlot.isEmpty()) {
-                    return;
+
+                // push item to down block
+                BlockEntity blockEntityDown = te.getLevel().getBlockEntity(te.getBlockPos().below());
+                if (blockEntityDown != null) {
+                    blockEntityDown.getCapability(ForgeCapabilities.ITEM_HANDLER).ifPresent(handler -> {
+                        ItemStack stack = te.getPlayerInv().extractItem(0, 1, false);
+                        if (!stack.isEmpty()) {
+                            handler.insertItem(0, stack, false);
+                        }
+                    });
                 }
-                ItemMusicCD.SongInfo songInfo = ItemMusicCD.getSongInfo(stackInSlot);
-                if (songInfo != null) {
-                    te.setPlayToClient(songInfo);
+
+                // pull item from top block
+                BlockEntity blockEntityTop = te.getLevel().getBlockEntity(te.getBlockPos().above());
+                if (blockEntityTop != null) {
+                    blockEntityTop.getCapability(ForgeCapabilities.ITEM_HANDLER).ifPresent(handler -> {
+                        // find all slots with item
+                        List<Integer> slots = new java.util.ArrayList<>();
+                        for (int i = 0; i < handler.getSlots(); i++) {
+                            ItemStack stack = handler.getStackInSlot(i);
+                            if (!stack.isEmpty() && stack.getItem() instanceof ItemMusicCD) {
+                                slots.add(i);
+                            }
+                        }
+                        // extract item from random slot
+                        if (!slots.isEmpty()) {
+                            // get random slot
+                            int slot = slots.get(level.random.nextInt(slots.size()));
+                            ItemStack stack = handler.extractItem(slot, 1, false);
+                            if (!stack.isEmpty()) {
+                                te.getPlayerInv().insertItem(0, stack, false);
+                            }
+                        }
+                    });
                 }
+            }
+            ItemStack stackInSlot = te.getPlayerInv().getStackInSlot(0);
+            if (stackInSlot.isEmpty()) {
+                return;
+            }
+            ItemMusicCD.SongInfo songInfo = ItemMusicCD.getSongInfo(stackInSlot);
+            if (songInfo != null) {
+                te.setPlayToClient(songInfo);
             }
         }
     }
