@@ -7,6 +7,7 @@ import com.github.tartaricacid.netmusic.item.ItemMusicCD;
 import com.github.tartaricacid.netmusic.network.NetworkHandler;
 import com.github.tartaricacid.netmusic.network.message.MusicToClientMessage;
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.Direction;
 import net.minecraft.core.HolderLookup;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.protocol.Packet;
@@ -18,10 +19,14 @@ import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockState;
+import net.neoforged.neoforge.capabilities.Capabilities;
 import net.neoforged.neoforge.items.IItemHandler;
 import net.neoforged.neoforge.items.ItemStackHandler;
 
 import javax.annotation.Nullable;
+
+import java.util.ArrayList;
+import java.util.List;
 
 import static com.github.tartaricacid.netmusic.block.BlockMusicPlayer.CYCLE_DISABLE;
 
@@ -134,15 +139,46 @@ public class TileEntityMusicPlayer extends BlockEntity {
             if (blockState.getValue(CYCLE_DISABLE)) {
                 te.setPlay(false);
                 te.markDirty();
-            } else {
-                ItemStack stackInSlot = te.getPlayerInv().getStackInSlot(0);
-                if (stackInSlot.isEmpty()) {
-                    return;
+
+                // push item to down block
+                var capabilityDown = te.getLevel().getCapability(Capabilities.ItemHandler.BLOCK, te.getBlockPos().below(), Direction.UP);
+                if (capabilityDown != null){
+                    ItemStack stack = te.getPlayerInv().extractItem(0, 1, false);
+                    if (!stack.isEmpty()){
+                        capabilityDown.insertItem(0, stack, false);
+                    }
                 }
-                ItemMusicCD.SongInfo songInfo = ItemMusicCD.getSongInfo(stackInSlot);
-                if (songInfo != null) {
-                    te.setPlayToClient(songInfo);
+
+                // pull item from top block
+                var capabilityTop = te.getLevel().getCapability(Capabilities.ItemHandler.BLOCK, te.getBlockPos().above(), Direction.DOWN);
+                if (capabilityTop != null){
+                    // find all slots with item
+                    List<Integer> slots = new ArrayList<>();
+                    int slotsCount = capabilityTop.getSlots();
+                    for (int i = 0; i < slotsCount; i++) {
+                        ItemStack stack = capabilityTop.getStackInSlot(i);
+                        if (!stack.isEmpty() && stack.getItem() instanceof ItemMusicCD) {
+                            slots.add(i);
+                        }
+                    }
+                    // extract item from random slot
+                    if (!slots.isEmpty()) {
+                        // get random slot
+                        int slot = slots.get(level.random.nextInt(slots.size()));
+                        ItemStack stack = capabilityTop.extractItem(slot, 1, false);
+                        if (!stack.isEmpty()) {
+                            te.getPlayerInv().insertItem(0, stack, false);
+                        }
+                    }
                 }
+            }
+            ItemStack stackInSlot = te.getPlayerInv().getStackInSlot(0);
+            if (stackInSlot.isEmpty()) {
+                return;
+            }
+            ItemMusicCD.SongInfo songInfo = ItemMusicCD.getSongInfo(stackInSlot);
+            if (songInfo != null) {
+                te.setPlayToClient(songInfo);
             }
         }
     }
