@@ -1,10 +1,13 @@
 package com.github.tartaricacid.netmusic.tileentity;
 
+import com.github.tartaricacid.netmusic.block.BlockMusicPlayer;
 import com.github.tartaricacid.netmusic.inventory.MusicPlayerInv;
 import com.github.tartaricacid.netmusic.item.ItemMusicCD;
 import com.github.tartaricacid.netmusic.network.MusicToClientMessage;
 import com.github.tartaricacid.netmusic.proxy.CommonProxy;
+import net.minecraft.block.BlockChest;
 import net.minecraft.block.state.IBlockState;
+import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.network.NetworkManager;
 import net.minecraft.network.play.server.SPacketUpdateTileEntity;
@@ -14,7 +17,10 @@ import net.minecraft.util.ITickable;
 import net.minecraftforge.common.capabilities.Capability;
 import net.minecraftforge.fml.common.network.NetworkRegistry;
 import net.minecraftforge.items.CapabilityItemHandler;
+import net.minecraftforge.items.IItemHandler;
 import net.minecraftforge.items.ItemStackHandler;
+
+import java.util.List;
 
 import javax.annotation.Nullable;
 
@@ -100,6 +106,55 @@ public class TileEntityMusicPlayer extends TileEntity implements ITickable {
         if (0 < this.getCurrentTime() && this.getCurrentTime() < 16 && this.getCurrentTime() % 5 == 0) {
             this.setPlay(false);
             this.markDirty();
+
+            // try push item to down block
+            TileEntity blockEntityDown = this.getWorld().getTileEntity(this.getPos().down());
+            if (blockEntityDown != null) {
+                IItemHandler handler = blockEntityDown.getCapability(CapabilityItemHandler.ITEM_HANDLER_CAPABILITY,EnumFacing.UP);
+                if (handler != null){
+                    ItemStack stack = this.getPlayerInv().extractItem(0, 1, false);
+                    if (!stack.isEmpty()) {
+                        handler.insertItem(0, stack, false);
+                    }
+                }
+            }
+
+            // check if internal inventory is empty
+            if (this.getPlayerInv().getStackInSlot(0).isEmpty()) {
+                // pull item from top block if internal inventory is empty
+                TileEntity blockEntityTop = this.getWorld().getTileEntity(this.getPos().up());
+                if (blockEntityTop != null) {
+                    IItemHandler handler = blockEntityTop.getCapability(CapabilityItemHandler.ITEM_HANDLER_CAPABILITY,EnumFacing.DOWN);
+                    if (handler != null){
+                        // find all slots with item
+                        List<Integer> slots = new java.util.ArrayList<>();
+                        for (int i = 0; i < handler.getSlots(); i++) {
+                            ItemStack stack = handler.getStackInSlot(i);
+                            if (!stack.isEmpty() && stack.getItem() instanceof ItemMusicCD) {
+                                slots.add(i);
+                            }
+                        }
+                        // extract item from random slot
+                        if (!slots.isEmpty()) {
+                            // get random slot
+                            int slot = slots.get(world.rand.nextInt(slots.size()));
+                            ItemStack stack = handler.extractItem(slot, 1, false);
+                            if (!stack.isEmpty()) {
+                                this.getPlayerInv().insertItem(0, stack, false);
+                            }
+                        }
+                    }
+                }
+            }
+
+            ItemStack stackInSlot = this.getPlayerInv().getStackInSlot(0);
+            if (stackInSlot.isEmpty()) {
+                return;
+            }
+            ItemMusicCD.SongInfo songInfo = ItemMusicCD.getSongInfo(stackInSlot);
+            if (songInfo != null) {
+                this.setPlayToClient(songInfo);
+            }
         }
     }
 
