@@ -4,6 +4,10 @@ import com.github.tartaricacid.netmusic.NetMusic;
 import com.github.tartaricacid.netmusic.init.InitItems;
 import com.github.tartaricacid.netmusic.item.ItemMusicCD;
 import com.github.tartaricacid.netmusic.tileentity.TileEntityMusicPlayer;
+import mcjty.theoneprobe.api.IBlockDisplayOverride;
+import mcjty.theoneprobe.api.IProbeHitData;
+import mcjty.theoneprobe.api.IProbeInfo;
+import mcjty.theoneprobe.api.ProbeMode;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockHorizontal;
 import net.minecraft.block.material.Material;
@@ -28,7 +32,7 @@ import net.minecraftforge.items.IItemHandler;
 
 import javax.annotation.Nonnull;
 
-public class BlockMusicPlayer extends BlockHorizontal {
+public class BlockMusicPlayer extends BlockHorizontal implements IBlockDisplayOverride {
     protected static final AxisAlignedBB AABB = new AxisAlignedBB(0.125D, 0.0D, 0.125D, 0.875D, 0.375D, 0.875D);
 
     public BlockMusicPlayer() {
@@ -226,5 +230,32 @@ public class BlockMusicPlayer extends BlockHorizontal {
     @SideOnly(Side.CLIENT)
     public boolean hasCustomBreakingProgress(IBlockState state) {
         return true;
+    }
+
+    @Override
+    public boolean overrideStandardInfo(ProbeMode probeMode, IProbeInfo iProbeInfo, EntityPlayer entityPlayer, World world, IBlockState iBlockState, IProbeHitData iProbeHitData) {
+        TileEntity tileEntity = world.getTileEntity(iProbeHitData.getPos());
+        if (tileEntity instanceof TileEntityMusicPlayer) {
+            TileEntityMusicPlayer musicPlayer = (TileEntityMusicPlayer) tileEntity;
+            ItemStack cdItem = musicPlayer.getPlayerInv().getStackInSlot(0);
+
+            // 添加方块名称到顶部信息
+            iProbeInfo.horizontal()
+                     .item(new ItemStack(this))
+                     .text(new TextComponentTranslation(this.getUnlocalizedName() + ".name").getFormattedText());
+
+            // 添加包含的音乐CD信息
+            if (!cdItem.isEmpty()) {
+                if (musicPlayer.isPlay()) {
+                    iProbeInfo.horizontal().text(new TextComponentTranslation("message.netmusic.music_player.playing").getFormattedText());
+                }
+                iProbeInfo.horizontal().text(cdItem.getDisplayName());
+            } else {
+                iProbeInfo.horizontal().text(new TextComponentTranslation("message.netmusic.music_player.empty").getFormattedText());
+            }
+
+            return true;
+        }
+        return false;
     }
 }

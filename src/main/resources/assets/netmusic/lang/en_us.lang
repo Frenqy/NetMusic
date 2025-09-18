@@ -9,6 +9,8 @@ tooltips.netmusic.cd.empty=Empty
 tile.netmusic.music_player.name=Music Player
 tile.netmusic.cd_burner.name=CD Burner
 message.netmusic.music_player.need_vip=This song is a VIP song and cannot be played
+message.netmusic.music_player.playing=Playing:
+message.netmusic.music_player.empty=Empty
 subtitle.netmusic.block.music_player=Music Player Sound
 
 command.netmusic.music_cd.reload=Usage: /netmusic <reload|get163|get163cd>
