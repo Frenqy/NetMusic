@@ -70,7 +70,7 @@ public class TileEntityMusicPlayer extends TileEntity implements ITickable {
         this.setCurrentTime(info.songTime * 20 + 64);
         this.isPlay = true;
         if (world != null && !world.isRemote) {
-            MusicToClientMessage msg = new MusicToClientMessage(pos, info.songUrl, info.songTime);
+            MusicToClientMessage msg = new MusicToClientMessage(pos, info.songUrl, info.songTime, info.songName);
             NetworkRegistry.TargetPoint point = new NetworkRegistry.TargetPoint(
                     world.provider.getDimension(),
                     pos.getX(), pos.getY(), pos.getZ(), 96);

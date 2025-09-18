@@ -23,14 +23,16 @@ public class MusicToClientMessage implements IMessage {
     private BlockPos pos;
     private String url;
     private int timeSecond;
+    private String songName;
 
     public MusicToClientMessage() {
     }
 
-    public MusicToClientMessage(BlockPos pos, String url, int timeSecond) {
+    public MusicToClientMessage(BlockPos pos, String url, int timeSecond, String songName) {
         this.pos = pos;
         this.url = url;
         this.timeSecond = timeSecond;
+        this.songName = songName;
     }
 
     @Override
@@ -38,6 +40,7 @@ public class MusicToClientMessage implements IMessage {
         pos = BlockPos.fromLong(buf.readLong());
         url = ByteBufUtils.readUTF8String(buf);
         timeSecond = buf.readInt();
+        songName = ByteBufUtils.readUTF8String(buf);
     }
 
     @Override
@@ -45,6 +48,7 @@ public class MusicToClientMessage implements IMessage {
         buf.writeLong(pos.toLong());
         ByteBufUtils.writeUTF8String(buf, url);
         buf.writeInt(timeSecond);
+        ByteBufUtils.writeUTF8String(buf, songName);
     }
 
     public static class Handler implements IMessageHandler<MusicToClientMessage, IMessage> {
@@ -54,6 +58,7 @@ public class MusicToClientMessage implements IMessage {
                 try {
                     NetMusicSound sound = new NetMusicSound(message.pos, new URL(url), message.timeSecond);
                     Minecraft.getMinecraft().getSoundHandler().playSound(sound);
+                    Minecraft.getMinecraft().ingameGUI.setRecordPlayingMessage(message.songName);
                 } catch (Exception e) {
                     e.printStackTrace();
                 }
