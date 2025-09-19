@@ -1,5 +1,6 @@
 package com.github.tartaricacid.netmusic.network;
 
+import com.coloryr.allmusic.client.core.AllMusicCore;
 import com.github.tartaricacid.netmusic.NetMusic;
 import com.github.tartaricacid.netmusic.api.NetWorker;
 import com.github.tartaricacid.netmusic.client.audio.NetMusicSound;
@@ -56,8 +57,9 @@ public class MusicToClientMessage implements IMessage {
         private static void playerMusic(MusicToClientMessage message, String url) {
             FMLClientHandler.instance().getClient().addScheduledTask(() -> {
                 try {
-                    NetMusicSound sound = new NetMusicSound(message.pos, new URL(url), message.timeSecond);
-                    Minecraft.getMinecraft().getSoundHandler().playSound(sound);
+                    // NetMusicSound sound = new NetMusicSound(message.pos, new URL(url), message.timeSecond);
+                    // Minecraft.getMinecraft().getSoundHandler().playSound(sound);
+                    AllMusicCore.SetMusic(url);
                     Minecraft.getMinecraft().ingameGUI.setRecordPlayingMessage(message.songName);
                 } catch (Exception e) {
                     e.printStackTrace();
