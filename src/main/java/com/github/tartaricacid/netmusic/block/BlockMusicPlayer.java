@@ -249,7 +249,18 @@ public class BlockMusicPlayer extends BlockHorizontal implements IBlockDisplayOv
                 if (musicPlayer.isPlay()) {
                     iProbeInfo.horizontal().text(new TextComponentTranslation("message.netmusic.music_player.playing").getFormattedText());
                 }
+                // 歌名
                 iProbeInfo.horizontal().text(cdItem.getDisplayName());
+                // 时间/总时间
+                ItemMusicCD.SongInfo songInfo = ItemMusicCD.getSongInfo(cdItem);
+                if (songInfo != null) {
+                    int restTime = (musicPlayer.getCurrentTime() - 64) / 20;
+                    int total = songInfo.songTime;
+                    int current = total - restTime;
+                    String timeInfo = String.format("%02d:%02d / %02d:%02d",
+                            current / 60, current % 60, total / 60, total % 60);
+                    iProbeInfo.horizontal().text(timeInfo);
+                }
             } else {
                 iProbeInfo.horizontal().text(new TextComponentTranslation("message.netmusic.music_player.empty").getFormattedText());
             }

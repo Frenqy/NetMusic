@@ -16,6 +16,7 @@ import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.common.Mod.EventHandler;
 import net.minecraftforge.fml.common.SidedProxy;
 import net.minecraftforge.fml.common.event.FMLInitializationEvent;
+import net.minecraftforge.fml.common.event.FMLInterModComms;
 import net.minecraftforge.fml.common.event.FMLPreInitializationEvent;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.minecraftforge.fml.common.gameevent.TickEvent;
@@ -52,6 +53,8 @@ public class NetMusic implements AllMusicBridge {
     @EventHandler
     public void init(FMLInitializationEvent event) {
         PROXY.init(event);
+        // 注册TOP兼容性
+        FMLInterModComms.sendFunctionMessage("theoneprobe", "getTheOneProbe", "com.github.tartaricacid.netmusic.compat.TOPCompat");
     }
 
     @Mod.EventHandler
