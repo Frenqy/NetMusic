@@ -23,6 +23,8 @@ import net.minecraftforge.fml.common.gameevent.TickEvent;
 import net.minecraftforge.fml.common.network.FMLEventChannel;
 import net.minecraftforge.fml.common.network.FMLNetworkEvent;
 import net.minecraftforge.fml.common.network.NetworkRegistry;
+import net.minecraftforge.fml.relauncher.Side;
+import net.minecraftforge.fml.relauncher.SideOnly;
 import org.apache.logging.log4j.Logger;
 import org.lwjgl.opengl.GL11;
 
@@ -59,89 +61,8 @@ public class NetMusic implements AllMusicBridge {
 
     @Mod.EventHandler
     public void preload(final FMLPreInitializationEvent evt) {
-        if (!evt.getModConfigurationDirectory().exists()) {
-            evt.getModConfigurationDirectory().mkdirs();
-        }
         AllMusicCore.init(evt.getModConfigurationDirectory().toPath(), this);
-        AllMusicCore.glInit();
         MinecraftForge.EVENT_BUS.register(this);
-        try {
-            Class<?> server = Class.forName("com.coloryr.allmusic.server.AllMusicForge");
-            Field m = server.getField("channel");
-            FMLEventChannel channel = (FMLEventChannel) m.get(null);
-            channel.register(this);
-        } catch (Exception e) {
-            NetworkRegistry.INSTANCE.newEventDrivenChannel("allmusic:channel")
-                    .register(this);
-        }
-    }
-
-
-    @Override
-    public Object genTexture(int size) {
-        return AllMusicCore.genGLTexture(size);
-    }
-
-    public int getScreenWidth() {
-        ScaledResolution scaledresolution = new ScaledResolution(Minecraft.getMinecraft());
-        return scaledresolution.getScaledWidth();
-    }
-
-    public int getScreenHeight() {
-        ScaledResolution scaledresolution = new ScaledResolution(Minecraft.getMinecraft());
-        return scaledresolution.getScaledHeight();
-    }
-
-    public int getTextWidth(String item) {
-        return Minecraft.getMinecraft().fontRenderer.getStringWidth(item);
-    }
-
-    public int getFontHeight() {
-        return Minecraft.getMinecraft().fontRenderer.FONT_HEIGHT;
-    }
-
-    @Override
-    public void updateTexture(Object tex, int size, ByteBuffer byteBuffer) {
-        AllMusicCore.updateGLTexture((int) tex, size, byteBuffer);
-    }
-
-    public void drawText(String item, int x, int y, int color, boolean shadow) {
-        FontRenderer font = Minecraft.getMinecraft().fontRenderer;
-        font.drawString(item, x, y, color, shadow);
-    }
-
-    public void drawPic(Object textureID, int size, int x, int y, int ang) {
-        GlStateManager.bindTexture((int)textureID);
-        GlStateManager.enableAlpha();
-        GlStateManager.color(1.0f, 1.0f, 1.0f, 1.0f);
-
-        int a = size / 2;
-        GL11.glPushMatrix();
-        GL11.glTranslatef((float) x + a, (float) y + a, 0.0f);
-
-        if (ang > 0) {
-            GL11.glRotatef(ang, 0, 0, 1f);
-        }
-
-        int x0 = -a;
-        int x1 = a;
-        int y0 = -a;
-        int y1 = a;
-
-        GL11.glBegin(7);
-        GL11.glTexCoord2f(0.0f, 0.0f);
-        GL11.glVertex3f(x0, y0, 0.0f);
-        GL11.glTexCoord2f(0.0f, 1.0f);
-        GL11.glVertex3f(x0, y1, 0.0f);
-        GL11.glTexCoord2f(1.0f, 1.0f);
-        GL11.glVertex3f(x1, y1, 0.0f);
-        GL11.glTexCoord2f(1.0f, 0.0f);
-        GL11.glVertex3f(x1, y0, 0.0f);
-        GL11.glEnd();
-        GL11.glPopMatrix();
-        GL11.glBindTexture(GL11.GL_TEXTURE_2D, 0);
-        GlStateManager.color(1.0f, 1.0f, 1.0f, 1.0f);
-        GlStateManager.enableAlpha();
     }
 
     public void sendMessage(String data) {
@@ -161,6 +82,7 @@ public class NetMusic implements AllMusicBridge {
     }
 
     @SubscribeEvent
+    @SideOnly(Side.CLIENT)
     public void onSound(final PlaySoundEvent e) {
         if (!AllMusicCore.isPlay()) return;
         SoundCategory data = e.getSound().getCategory();
@@ -172,11 +94,13 @@ public class NetMusic implements AllMusicBridge {
     }
 
     @SubscribeEvent
+    @SideOnly(Side.CLIENT)
     public void onServerQuit(final FMLNetworkEvent.ClientDisconnectionFromServerEvent e) {
         AllMusicCore.onServerQuit();
     }
 
     @SubscribeEvent
+    @SideOnly(Side.CLIENT)
     public void onTick(TickEvent.ClientTickEvent event) {
         if (event.phase == TickEvent.Phase.END) {
             AllMusicCore.tick();
