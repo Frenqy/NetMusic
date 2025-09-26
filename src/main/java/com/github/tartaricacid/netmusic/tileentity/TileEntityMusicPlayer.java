@@ -71,10 +71,7 @@ public class TileEntityMusicPlayer extends TileEntity implements ITickable {
         this.isPlay = true;
         if (world != null && !world.isRemote) {
             MusicToClientMessage msg = new MusicToClientMessage(pos, info.songUrl, info.songTime, info.songName);
-            NetworkRegistry.TargetPoint point = new NetworkRegistry.TargetPoint(
-                    world.provider.getDimension(),
-                    pos.getX(), pos.getY(), pos.getZ(), 96);
-            CommonProxy.INSTANCE.sendToAllAround(msg, point);
+            CommonProxy.INSTANCE.sendToAll(msg);
         }
     }
 

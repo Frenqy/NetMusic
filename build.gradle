@@ -11,7 +11,7 @@ buildscript {
 apply plugin: 'net.minecraftforge.gradle'
 apply plugin: 'eclipse'
 
-version = '2.2.1'
+version = '2.3.0'
 group = 'com.github.tartaricacid'
 archivesBaseName = 'netmusic-1.12.2'
 
