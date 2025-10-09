@@ -139,15 +139,30 @@ public class AllMusicPlayer extends InputStream {
                     continue;
                 }
 
-                decoder = new FlacDecoder(this);
+//                decoder = new FlacDecoder(this);
+//                if (!decoder.set()) {
+//                    local = 0;
+//                    connect();
+//                    decoder = new OggDecoder(this);
+//                    if (!decoder.set()) {
+//                        local = 0;
+//                        connect();
+//                        decoder = new Mp3Decoder(this);
+//                        if (!decoder.set()) {
+//                            AllMusicCore.bridge.sendMessage("[AllMusic客户端]不支持这样的文件播放");
+//                            continue;
+//                        }
+//                    }
+//                }
+                decoder = new Mp3Decoder(this);
                 if (!decoder.set()) {
                     local = 0;
                     connect();
-                    decoder = new OggDecoder(this);
+                    decoder = new FlacDecoder(this);
                     if (!decoder.set()) {
                         local = 0;
                         connect();
-                        decoder = new Mp3Decoder(this);
+                        decoder = new OggDecoder(this);
                         if (!decoder.set()) {
                             AllMusicCore.bridge.sendMessage("[AllMusic客户端]不支持这样的文件播放");
                             continue;

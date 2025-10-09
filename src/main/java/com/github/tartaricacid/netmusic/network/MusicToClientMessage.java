@@ -1,6 +1,7 @@
 package com.github.tartaricacid.netmusic.network;
 
 import com.coloryr.allmusic.client.core.AllMusicCore;
+import com.coloryr.allmusic.client.core.HttpClientUtil;
 import com.github.tartaricacid.netmusic.NetMusic;
 import com.github.tartaricacid.netmusic.api.NetWorker;
 import com.github.tartaricacid.netmusic.client.audio.NetMusicSound;
@@ -25,15 +26,17 @@ public class MusicToClientMessage implements IMessage {
     private String url;
     private int timeSecond;
     private String songName;
+    private long songId;
 
     public MusicToClientMessage() {
     }
 
-    public MusicToClientMessage(BlockPos pos, String url, int timeSecond, String songName) {
+    public MusicToClientMessage(BlockPos pos, String url, int timeSecond, String songName, long songId) {
         this.pos = pos;
         this.url = url;
         this.timeSecond = timeSecond;
         this.songName = songName;
+        this.songId = songId;
     }
 
     @Override
@@ -42,6 +45,7 @@ public class MusicToClientMessage implements IMessage {
         url = ByteBufUtils.readUTF8String(buf);
         timeSecond = buf.readInt();
         songName = ByteBufUtils.readUTF8String(buf);
+        songId = buf.readLong();
     }
 
     @Override
@@ -50,6 +54,7 @@ public class MusicToClientMessage implements IMessage {
         ByteBufUtils.writeUTF8String(buf, url);
         buf.writeInt(timeSecond);
         ByteBufUtils.writeUTF8String(buf, songName);
+        buf.writeLong(songId);
     }
 
     public static class Handler implements IMessageHandler<MusicToClientMessage, IMessage> {
@@ -57,8 +62,6 @@ public class MusicToClientMessage implements IMessage {
         private static void playerMusic(MusicToClientMessage message, String url) {
             FMLClientHandler.instance().getClient().addScheduledTask(() -> {
                 try {
-                    // NetMusicSound sound = new NetMusicSound(message.pos, new URL(url), message.timeSecond);
-                    // Minecraft.getMinecraft().getSoundHandler().playSound(sound);
                     AllMusicCore.SetMusic(url);
                     Minecraft.getMinecraft().ingameGUI.setRecordPlayingMessage(message.songName);
                 } catch (Exception e) {
@@ -72,7 +75,14 @@ public class MusicToClientMessage implements IMessage {
         public IMessage onMessage(MusicToClientMessage message, MessageContext ctx) {
             if (ctx.side == Side.CLIENT) {
                 String url = message.url;
-                if (message.url.startsWith("https://music.163.com/")) {
+
+                long id = message.songId;
+                if (id != 0) {
+                    url = HttpClientUtil.getPlayUrl(String.valueOf(id));
+                    NetMusic.LOGGER.info("获取到的播放地址为: " + url);
+                }
+
+                if (url == null && message.url.startsWith("https://music.163.com/")) {
                     try {
                         url = NetWorker.getRedirectUrl(message.url, NetMusic.NET_EASE_WEB_API.getRequestPropertyData());
                     } catch (IOException e) {

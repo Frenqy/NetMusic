@@ -1,6 +1,7 @@
 package com.github.tartaricacid.netmusic.block;
 
 import com.github.tartaricacid.netmusic.NetMusic;
+import com.github.tartaricacid.netmusic.Tags;
 import com.github.tartaricacid.netmusic.init.InitItems;
 import com.github.tartaricacid.netmusic.item.ItemMusicCD;
 import com.github.tartaricacid.netmusic.tileentity.TileEntityMusicPlayer;
@@ -22,6 +23,7 @@ import net.minecraft.util.*;
 import net.minecraft.util.math.AxisAlignedBB;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.text.Style;
+import net.minecraft.util.text.TextComponentString;
 import net.minecraft.util.text.TextComponentTranslation;
 import net.minecraft.util.text.TextFormatting;
 import net.minecraft.world.IBlockAccess;
@@ -37,7 +39,7 @@ public class BlockMusicPlayer extends BlockHorizontal implements IBlockDisplayOv
 
     public BlockMusicPlayer() {
         super(Material.WOOD);
-        setUnlocalizedName(NetMusic.MOD_ID + "." + "music_player");
+        setTranslationKey(Tags.MOD_ID + "." + "music_player");
         setHardness(0.5f);
         setRegistryName("music_player");
         setCreativeTab(InitItems.TAB);
@@ -68,12 +70,6 @@ public class BlockMusicPlayer extends BlockHorizontal implements IBlockDisplayOv
         ItemStack stack = playerIn.getHeldItemMainhand();
         ItemMusicCD.SongInfo info = ItemMusicCD.getSongInfo(stack);
         if (info == null) {
-            return false;
-        }
-        if (info.vip) {
-            if (worldIn.isRemote) {
-                playerIn.sendMessage(new TextComponentTranslation("message.netmusic.music_player.need_vip").setStyle((new Style()).setColor(TextFormatting.RED)));
-            }
             return false;
         }
 
@@ -186,7 +182,7 @@ public class BlockMusicPlayer extends BlockHorizontal implements IBlockDisplayOv
 
     @Override
     public IBlockState getStateFromMeta(int meta) {
-        EnumFacing enumfacing = EnumFacing.getHorizontal(meta);
+        EnumFacing enumfacing = EnumFacing.HORIZONTALS[meta];
         return getDefaultState().withProperty(FACING, enumfacing);
     }
 
@@ -242,7 +238,7 @@ public class BlockMusicPlayer extends BlockHorizontal implements IBlockDisplayOv
             // 添加方块名称到顶部信息
             iProbeInfo.horizontal()
                      .item(new ItemStack(this))
-                     .text(new TextComponentTranslation(this.getUnlocalizedName() + ".name").getFormattedText());
+                     .text(new TextComponentString(this.getLocalizedName()).getFormattedText());
 
             // 添加包含的音乐CD信息
             if (!cdItem.isEmpty()) {

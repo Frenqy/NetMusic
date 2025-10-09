@@ -1,6 +1,7 @@
 package com.github.tartaricacid.netmusic.client.renderer;
 
 import com.github.tartaricacid.netmusic.NetMusic;
+import com.github.tartaricacid.netmusic.Tags;
 import com.github.tartaricacid.netmusic.client.model.ModelMusicPlayer;
 import com.github.tartaricacid.netmusic.tileentity.TileEntityMusicPlayer;
 import net.minecraft.client.Minecraft;
@@ -16,7 +17,7 @@ import org.lwjgl.opengl.GL11;
 
 public class MusicPlayerRenderer extends TileEntitySpecialRenderer<TileEntityMusicPlayer> {
     public static final ModelMusicPlayer MODEL = new ModelMusicPlayer();
-    public static final ResourceLocation TEXTURE = new ResourceLocation(NetMusic.MOD_ID, "textures/block/music_player.png");
+    public static final ResourceLocation TEXTURE = new ResourceLocation(Tags.MOD_ID, "textures/block/music_player.png");
     public static MusicPlayerRenderer instance;
 
     public MusicPlayerRenderer() {
@@ -25,7 +26,7 @@ public class MusicPlayerRenderer extends TileEntitySpecialRenderer<TileEntityMus
 
     @Override
     public void render(TileEntityMusicPlayer te, double x, double y, double z, float partialTicks, int destroyStage, float alpha) {
-        EnumFacing facing = EnumFacing.getHorizontal(te.getBlockMetadata());
+        EnumFacing facing = EnumFacing.HORIZONTALS[te.getBlockMetadata()];
         ItemStack cd = te.getPlayerInv().getStackInSlot(0);
         ModelRenderer disc = MODEL.getDiscBone();
         disc.isHidden = cd.isEmpty();

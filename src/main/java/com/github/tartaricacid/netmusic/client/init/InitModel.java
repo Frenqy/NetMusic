@@ -1,6 +1,7 @@
 package com.github.tartaricacid.netmusic.client.init;
 
 import com.github.tartaricacid.netmusic.NetMusic;
+import com.github.tartaricacid.netmusic.Tags;
 import com.github.tartaricacid.netmusic.client.renderer.MusicPlayerItemRenderer;
 import com.github.tartaricacid.netmusic.client.renderer.MusicPlayerRenderer;
 import com.github.tartaricacid.netmusic.init.InitBlocks;
@@ -20,7 +21,7 @@ import net.minecraftforge.fml.relauncher.SideOnly;
 import java.util.Objects;
 
 @SideOnly(Side.CLIENT)
-@Mod.EventBusSubscriber(modid = NetMusic.MOD_ID, value = Side.CLIENT)
+@Mod.EventBusSubscriber(modid = Tags.MOD_ID, value = Side.CLIENT)
 public final class InitModel {
     @SubscribeEvent
     public static void register(ModelRegistryEvent event) {

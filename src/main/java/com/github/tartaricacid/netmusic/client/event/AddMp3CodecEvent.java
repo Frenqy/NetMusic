@@ -1,6 +1,7 @@
 package com.github.tartaricacid.netmusic.client.event;
 
 import com.github.tartaricacid.netmusic.NetMusic;
+import com.github.tartaricacid.netmusic.Tags;
 import com.github.tartaricacid.netmusic.client.codec.CodecMp3;
 import net.minecraftforge.client.event.sound.SoundSetupEvent;
 import net.minecraftforge.fml.common.Mod;
@@ -11,7 +12,7 @@ import paulscode.sound.SoundSystemConfig;
 import paulscode.sound.SoundSystemException;
 
 @SideOnly(Side.CLIENT)
-@Mod.EventBusSubscriber(modid = NetMusic.MOD_ID, value = Side.CLIENT)
+@Mod.EventBusSubscriber(modid = Tags.MOD_ID, value = Side.CLIENT)
 public class AddMp3CodecEvent {
     @SubscribeEvent
     public static void onSoundSetup(SoundSetupEvent event) {

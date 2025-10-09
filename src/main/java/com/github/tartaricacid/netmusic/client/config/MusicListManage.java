@@ -1,6 +1,7 @@
 package com.github.tartaricacid.netmusic.client.config;
 
 import com.github.tartaricacid.netmusic.NetMusic;
+import com.github.tartaricacid.netmusic.Tags;
 import com.github.tartaricacid.netmusic.api.ExtraMusicList;
 import com.github.tartaricacid.netmusic.api.pojo.NetEaseMusicList;
 import com.github.tartaricacid.netmusic.api.pojo.NetEaseMusicSong;
@@ -45,7 +46,7 @@ public class MusicListManage {
         if (Files.exists(CONFIG_FILE)) {
             stream = Files.newInputStream(file.toPath());
         } else {
-            ResourceLocation res = new ResourceLocation(NetMusic.MOD_ID, "music.json");
+            ResourceLocation res = new ResourceLocation(Tags.MOD_ID, "music.json");
             stream = Minecraft.getMinecraft().getResourceManager().getResource(res).getInputStream();
         }
 

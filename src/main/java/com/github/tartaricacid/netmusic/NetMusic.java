@@ -2,9 +2,13 @@ package com.github.tartaricacid.netmusic;
 
 import com.coloryr.allmusic.client.core.AllMusicBridge;
 import com.coloryr.allmusic.client.core.AllMusicCore;
+import com.coloryr.allmusic.client.core.HttpClientUtil;
+import com.coloryr.allmusic.client.core.objs.CookieObj;
 import com.github.tartaricacid.netmusic.api.NetEaseMusic;
 import com.github.tartaricacid.netmusic.api.WebApi;
 import com.github.tartaricacid.netmusic.proxy.CommonProxy;
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.FontRenderer;
 import net.minecraft.client.gui.ScaledResolution;
@@ -25,19 +29,25 @@ import net.minecraftforge.fml.common.network.FMLNetworkEvent;
 import net.minecraftforge.fml.common.network.NetworkRegistry;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
+import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.lwjgl.opengl.GL11;
-
+import okhttp3.Cookie;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Map;
+import java.io.*;
 import java.lang.reflect.Field;
 import java.nio.ByteBuffer;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
 
-@Mod(modid = NetMusic.MOD_ID, name = NetMusic.NAME, version = NetMusic.VERSION)
+@Mod(modid = Tags.MOD_ID, name = Tags.MOD_NAME, version = Tags.VERSION)
 public class NetMusic implements AllMusicBridge {
-    public static final String MOD_ID = "netmusic";
-    public static final String NAME = "Net Music Mod";
-    public static final String VERSION = "1.0.1";
+    public static CookieObj cookie;
+    private static File configDir;
 
-    public static Logger LOGGER;
+    public static final Logger LOGGER = LogManager.getLogger(Tags.MOD_NAME);
     @SidedProxy(serverSide = "com.github.tartaricacid.netmusic.proxy.CommonProxy",
             clientSide = "com.github.tartaricacid.netmusic.proxy.ClientProxy")
     public static CommonProxy PROXY;
@@ -47,7 +57,6 @@ public class NetMusic implements AllMusicBridge {
 
     @EventHandler
     public void preInit(FMLPreInitializationEvent event) {
-        LOGGER = event.getModLog();
         NET_EASE_WEB_API = new NetEaseMusic().getApi();
         PROXY.preInit(event);
     }
@@ -61,8 +70,12 @@ public class NetMusic implements AllMusicBridge {
 
     @Mod.EventHandler
     public void preload(final FMLPreInitializationEvent evt) {
-        AllMusicCore.init(evt.getModConfigurationDirectory().toPath(), this);
+        configDir = evt.getModConfigurationDirectory();
+        loadRawCookie();
+        loadConfig();
+        AllMusicCore.init(configDir.toPath(), this);
         MinecraftForge.EVENT_BUS.register(this);
+        HttpClientUtil.init();
     }
 
     public void sendMessage(String data) {
@@ -104,6 +117,85 @@ public class NetMusic implements AllMusicBridge {
     public void onTick(TickEvent.ClientTickEvent event) {
         if (event.phase == TickEvent.Phase.END) {
             AllMusicCore.tick();
+        }
+    }
+
+    private static void loadConfig(){
+        try{
+            File cookieFile = new File(configDir, "netmusic_cookie.json");
+
+            InputStreamReader reader = new InputStreamReader(Files.newInputStream(cookieFile.toPath()), StandardCharsets.UTF_8);
+            BufferedReader bf = new BufferedReader(reader);
+            cookie = new Gson().fromJson(bf, CookieObj.class);
+            bf.close();
+            reader.close();
+            if (cookie == null || cookie.cookieStore == null) {
+                cookie = new CookieObj();
+                saveCookie();
+            }
+        }catch (Exception e) {
+            //log.warning("§d[AllMusic3]§c读取配置文件错误");
+            e.printStackTrace();
+        }
+    }
+
+    private static void loadRawCookie(){
+        File cookieFile = new File(configDir, "netmusic_raw_cookie.txt");
+        String cookieStr = "";
+        try {
+            InputStreamReader reader = new InputStreamReader(Files.newInputStream(cookieFile.toPath()), StandardCharsets.UTF_8);
+            BufferedReader bf = new BufferedReader(reader);
+            String line;
+            while ((line = bf.readLine()) != null) {
+                cookieStr += line;
+            }
+            bf.close();
+            reader.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+        if (!cookieStr.isEmpty()) {
+            String[] cookies = cookieStr.split(";");
+            Map<String, Cookie> list1 = new HashMap<>();
+            for (String item : cookies) {
+                String[] cookieitem = item.split("=");
+                if (cookieitem.length == 1) {
+                    if (list1.containsKey(cookieitem[0])) {
+                        continue;
+                    }
+                    list1.put(cookieitem[0], new Cookie.Builder()
+                            .name(cookieitem[0])
+                            .domain("163.com")
+                            .expiresAt(Long.MAX_VALUE)
+                            .build());
+                } else {
+                    list1.put(cookieitem[0], new Cookie.Builder()
+                            .name(cookieitem[0])
+                            .value(cookieitem[1])
+                            .domain("163.com")
+                            .expiresAt(Long.MAX_VALUE)
+                            .build());
+                }
+            }
+            cookie = new CookieObj();
+            cookie.cookieStore.put("music.163.com", new ArrayList<>(list1.values()));
+            saveCookie();
+        }
+    }
+
+    public static void saveCookie() {
+        try {
+            File cookieFile = new File(configDir, "netmusic_cookie.json");
+            String data = new GsonBuilder().setPrettyPrinting().create().toJson(cookie);
+            FileOutputStream out = new FileOutputStream(cookieFile);
+            OutputStreamWriter write = new OutputStreamWriter(
+                    out, StandardCharsets.UTF_8);
+            write.write(data);
+            write.close();
+        } catch (Exception e) {
+            //log.warning("§d[AllMusic3]§c配置文件保存错误");
+            e.printStackTrace();
         }
     }
 }

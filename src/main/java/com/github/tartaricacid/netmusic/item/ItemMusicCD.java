@@ -1,6 +1,7 @@
 package com.github.tartaricacid.netmusic.item;
 
 import com.github.tartaricacid.netmusic.NetMusic;
+import com.github.tartaricacid.netmusic.Tags;
 import com.github.tartaricacid.netmusic.api.pojo.NetEaseMusicList;
 import com.github.tartaricacid.netmusic.api.pojo.NetEaseMusicSong;
 import com.github.tartaricacid.netmusic.client.config.MusicListManage;
@@ -27,7 +28,7 @@ public class ItemMusicCD extends Item {
     public static final String SONG_INFO_TAG = "NetMusicSongInfo";
 
     public ItemMusicCD() {
-        setUnlocalizedName(NetMusic.MOD_ID + ".music_cd");
+        setTranslationKey(Tags.MOD_ID + ".music_cd");
         setCreativeTab(InitItems.TAB);
         setRegistryName("music_cd");
     }
@@ -125,6 +126,8 @@ public class ItemMusicCD extends Item {
         public boolean vip = false;
         @SerializedName("artists")
         public List<String> artists = Lists.newArrayList();
+        @SerializedName("song_id")
+        public long songId = 0;
 
         public SongInfo(NetEaseMusicSong pojo) {
             NetEaseMusicSong.Song song = pojo.getSong();
@@ -135,6 +138,7 @@ public class ItemMusicCD extends Item {
                 this.transName = song.getTransName();
                 this.vip = song.needVip();
                 this.artists = song.getArtists();
+                this.songId = song.getId();
             }
         }
 
@@ -145,6 +149,7 @@ public class ItemMusicCD extends Item {
             this.transName = track.getTransName();
             this.vip = track.needVip();
             this.artists = track.getArtists();
+            this.songId = track.getId();
         }
 
         public SongInfo(NBTTagCompound tag) {
@@ -161,6 +166,9 @@ public class ItemMusicCD extends Item {
                 NBTTagList tagList = tag.getTagList("artists", Constants.NBT.TAG_STRING);
                 this.artists = Lists.newArrayList();
                 tagList.forEach(nbt -> this.artists.add(((NBTTagString) nbt).getString()));
+            }
+            if (tag.hasKey("song_id", Constants.NBT.TAG_LONG)) {
+                this.songId = tag.getLong("song_id");
             }
         }
 
@@ -181,6 +189,7 @@ public class ItemMusicCD extends Item {
                 info.artists.forEach(name -> nbt.appendTag(new NBTTagString(name)));
                 tag.setTag("artists", nbt);
             }
+            tag.setLong("song_id", info.songId);
         }
     }
 }

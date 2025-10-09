@@ -1,6 +1,7 @@
 package com.github.tartaricacid.netmusic.block;
 
 import com.github.tartaricacid.netmusic.NetMusic;
+import com.github.tartaricacid.netmusic.Tags;
 import com.github.tartaricacid.netmusic.init.InitItems;
 import com.github.tartaricacid.netmusic.network.NetMusicGuiHandler;
 import net.minecraft.block.BlockHorizontal;
@@ -24,7 +25,7 @@ public class BlockCDBurner extends BlockHorizontal {
 
     public BlockCDBurner() {
         super(Material.WOOD);
-        setUnlocalizedName(NetMusic.MOD_ID + "." + "cd_burner");
+        setTranslationKey(Tags.MOD_ID + "." + "cd_burner");
         setHardness(0.5f);
         setRegistryName("cd_burner");
         setCreativeTab(InitItems.TAB);
@@ -57,7 +58,7 @@ public class BlockCDBurner extends BlockHorizontal {
     }
 
     @Override
-    public BlockRenderLayer getBlockLayer() {
+    public BlockRenderLayer getRenderLayer() {
         return BlockRenderLayer.CUTOUT;
     }
 
@@ -68,7 +69,7 @@ public class BlockCDBurner extends BlockHorizontal {
 
     @Override
     public IBlockState getStateFromMeta(int meta) {
-        EnumFacing enumfacing = EnumFacing.getHorizontal(meta);
+        EnumFacing enumfacing = EnumFacing.HORIZONTALS[meta];
         return getDefaultState().withProperty(FACING, enumfacing);
     }
 

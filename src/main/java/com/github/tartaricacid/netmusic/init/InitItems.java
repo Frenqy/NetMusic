@@ -1,6 +1,7 @@
 package com.github.tartaricacid.netmusic.init;
 
 import com.github.tartaricacid.netmusic.NetMusic;
+import com.github.tartaricacid.netmusic.Tags;
 import com.github.tartaricacid.netmusic.item.ItemMusicCD;
 import net.minecraft.creativetab.CreativeTabs;
 import net.minecraft.item.Item;
@@ -11,14 +12,14 @@ import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.minecraftforge.fml.common.registry.GameRegistry;
 
-@Mod.EventBusSubscriber(modid = NetMusic.MOD_ID)
+@Mod.EventBusSubscriber(modid = Tags.MOD_ID)
 public final class InitItems {
-    @GameRegistry.ObjectHolder(NetMusic.MOD_ID + ":" + "music_cd")
+    @GameRegistry.ObjectHolder(Tags.MOD_ID + ":" + "music_cd")
     public static Item MUSIC_CD;
 
     public static CreativeTabs TAB = new CreativeTabs("netmusic") {
         @Override
-        public ItemStack getTabIconItem() {
+        public ItemStack createIcon() {
             return new ItemStack(InitBlocks.MUSIC_PLAYER);
         }
     };
