@@ -39,35 +39,25 @@ minecraft.accessTransformers.file rootProject.file('src/main/resources/META-INF/
 
 // 运行部分
 runs {
+    // applies to all the run configs below
     configureEach {
-        // +AllowEnhancedClassRedefinition 为 JetBrains Runtime 所需的参数
-        // JetBrains Runtime 是一个修改过的 JDK，支持热重载
-        // +IgnoreUnrecognizedVMOptions 用于忽略未知指令
-        // 否则没有安装 JetBrains Runtime 的用户运行时会报错
-        jvmArguments = ['-XX:+IgnoreUnrecognizedVMOptions',
-                        '-XX:+AllowEnhancedClassRedefinition']
+        // Recommended logging data for a userdev environment
+        // The markers can be added/remove as needed separated by commas.
+        // "SCAN": For mods scan.
+        // "REGISTRIES": For firing of registry events.
+        // "REGISTRYDUMP": For getting the contents of all registries.
         systemProperty 'forge.logging.markers', 'REGISTRIES'
-        systemProperty 'forge.logging.console.level', 'debug'
-        modSource project.sourceSets.main
 
-        dependencies {
-            runtime 'com.googlecode.soundlibs:mp3spi:1.9.5.4'
-            runtime 'libs:jflac-codec:1.5.3-SNAPSHOT'
-        }
+        // Recommended logging level for the console
+        // You can set various levels here.
+        // Please read: https://stackoverflow.com/questions/2031163/when-to-use-the-different-log-levels
+        systemProperty 'forge.logging.console.level', 'debug'
+
+        modSource project.sourceSets.main
     }
 
     client {
-        // 设置运行后玩家的名称
-        programArguments = ["--username", "mayday"]
-        systemProperty 'forge.enabledGameTestNamespaces', project.mod_id
-    }
-
-    // 新建 client2，方便本机进行互联调试
-    client2 {
-        configure "client"
-        // 单独放一个客户端文件夹
-        workingDirectory 'runs/client2'
-        programArguments = ["--username", "tartaric_acid"]
+        // Comma-separated list of namespaces to load gametests from. Empty = all namespaces.
         systemProperty 'forge.enabledGameTestNamespaces', project.mod_id
     }
 
@@ -76,11 +66,18 @@ runs {
         programArgument '--nogui'
     }
 
+    // This run config launches GameTestServer and runs all registered gametests, then exits.
+    // By default, the server will crash when no gametests are provided.
+    // The gametest system is also enabled by default for other run configs under the /test command.
     gameTestServer {
         systemProperty 'forge.enabledGameTestNamespaces', project.mod_id
     }
 
     data {
+        // example of overriding the workingDirectory set in configureEach above, uncomment if you want to use it
+        // workingDirectory project.file('run-data')
+
+        // Specify the modid for data generation, where to output the resulting resource, and where to look for existing resources.
         programArguments.addAll '--mod', project.mod_id, '--all', '--output', file('src/generated/resources/').getAbsolutePath(), '--existing', file('src/main/resources/').getAbsolutePath()
     }
 }
@@ -151,6 +148,15 @@ dependencies {
     jarJar "com.googlecode.soundlibs:jlayer:1.0.1.4"
     jarJar "com.googlecode.soundlibs:tritonus-share:0.3.7.4"
     jarJar "libs:jflac-codec:1.5.3-SNAPSHOT"
+
+    // AllMusic
+    implementation 'org.jetbrains.kotlin:kotlin-stdlib:1.9.10'
+    implementation 'com.squareup.okhttp3:okhttp:4.12.0'
+    jarJar (group: 'com.squareup.okhttp3', name: 'okhttp', version: '[4.12, 5.0)')
+    jarJar (group: 'com.squareup.okio', name: 'okio-jvm', version: '[3.6, 4.0)') {
+        jarJar.pin(it, '3.9.0')
+    }
+    jarJar 'org.jetbrains.kotlin:kotlin-stdlib:1.9.10'
 }
 
 // 启用 jarJar

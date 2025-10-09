@@ -192,12 +192,6 @@ public class BlockMusicPlayer extends HorizontalDirectionalBlock implements Enti
         if (info == null) {
             return ItemInteractionResult.PASS_TO_DEFAULT_BLOCK_INTERACTION;
         }
-        if (info.vip) {
-            if (worldIn.isClientSide) {
-                playerIn.sendSystemMessage(Component.translatable("message.netmusic.music_player.need_vip").withStyle(ChatFormatting.RED));
-            }
-            return ItemInteractionResult.FAIL;
-        }
 
         handler.insertItem(0, stack.copy(), false);
         if (!playerIn.isCreative()) {

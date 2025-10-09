@@ -104,7 +104,8 @@ public class ItemMusicCD extends Item {
                 Codec.STRING.optionalFieldOf("trans_name", StringUtils.EMPTY).forGetter(i -> i.transName),
                 Codec.BOOL.optionalFieldOf("vip", false).forGetter(i -> i.vip),
                 Codec.BOOL.optionalFieldOf("readOnly", false).forGetter(i -> i.readOnly),
-                Codec.STRING.listOf().optionalFieldOf("artists", Collections.emptyList()).forGetter(i -> i.artists)
+                Codec.STRING.listOf().optionalFieldOf("artists", Collections.emptyList()).forGetter(i -> i.artists),
+                Codec.LONG.optionalFieldOf("song_id", 0L).forGetter(i -> i.songId)
         ).apply(instance, SongInfo::new));
 
         private static final StreamCodec<ByteBuf, List<String>> ARTISTS_CODEC = ByteBufCodecs.collection(ArrayList::new, ByteBufCodecs.STRING_UTF8);
@@ -118,6 +119,7 @@ public class ItemMusicCD extends Item {
                     ByteBufCodecs.BOOL.encode(buffer, songInfo.vip);
                     ByteBufCodecs.BOOL.encode(buffer, songInfo.readOnly);
                     ARTISTS_CODEC.encode(buffer, songInfo.artists);
+                    ByteBufCodecs.VAR_LONG.encode(buffer, songInfo.songId);
                 },
                 buffer -> new SongInfo(
                         ByteBufCodecs.STRING_UTF8.decode(buffer),
@@ -126,7 +128,8 @@ public class ItemMusicCD extends Item {
                         ByteBufCodecs.STRING_UTF8.decode(buffer),
                         ByteBufCodecs.BOOL.decode(buffer),
                         ByteBufCodecs.BOOL.decode(buffer),
-                        ARTISTS_CODEC.decode(buffer)
+                        ARTISTS_CODEC.decode(buffer),
+                        ByteBufCodecs.VAR_LONG.decode(buffer)
                 )
         );
 
@@ -145,11 +148,13 @@ public class ItemMusicCD extends Item {
         public boolean readOnly = false;
         @SerializedName("artists")
         public List<String> artists = Lists.newArrayList();
+        @SerializedName("song_id")
+        public long songId = 0;
 
         public SongInfo() {
         }
 
-        public SongInfo(String songUrl, String songName, int songTime, String transName, boolean vip, boolean readOnly, List<String> artists) {
+        public SongInfo(String songUrl, String songName, int songTime, String transName, boolean vip, boolean readOnly, List<String> artists, long songId) {
             this.songUrl = songUrl;
             this.songName = songName;
             this.songTime = songTime;
@@ -157,10 +162,11 @@ public class ItemMusicCD extends Item {
             this.vip = vip;
             this.readOnly = readOnly;
             this.artists = artists;
+            this.songId = songId;
         }
 
         public SongInfo(String songUrl, String songName, int songTime, boolean readOnly) {
-            this(songUrl, songName, songTime, "", false, readOnly, Collections.emptyList());
+            this(songUrl, songName, songTime, "", false, readOnly, Collections.emptyList(), 0L);
         }
 
         public SongInfo(NetEaseMusicSong pojo) {
@@ -172,6 +178,7 @@ public class ItemMusicCD extends Item {
                 this.transName = song.getTransName();
                 this.vip = song.needVip();
                 this.artists = song.getArtists();
+                this.songId = song.getId();
             }
         }
 
@@ -182,6 +189,7 @@ public class ItemMusicCD extends Item {
             this.transName = song.getTransName();
             this.vip = song.needVip();
             this.artists = song.getArtists();
+            this.songId = song.getId();
         }
 
         public SongInfo(NetEaseMusicList.Track track) {
@@ -191,6 +199,7 @@ public class ItemMusicCD extends Item {
             this.transName = track.getTransName();
             this.vip = track.needVip();
             this.artists = track.getArtists();
+            this.songId = track.getId();
         }
 
         @Override
@@ -205,13 +214,14 @@ public class ItemMusicCD extends Item {
                        && Objects.equals(songTime, other.songTime)
                        && Objects.equals(transName, other.transName)
                        && Objects.equals(vip, other.vip)
-                       && Objects.equals(artists, other.artists);
+                       && Objects.equals(artists, other.artists)
+                       && Objects.equals(songId, other.songId);
             }
         }
 
         @Override
         public int hashCode() {
-            return Objects.hash(songUrl, songName, songTime, transName, vip, artists);
+            return Objects.hash(songUrl, songName, songTime, transName, vip, artists, songId);
         }
     }
 }
