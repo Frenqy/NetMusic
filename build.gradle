@@ -146,7 +146,6 @@ dependencies {
         testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
     }
 
-    implementation group: 'com.googlecode.soundlibs', name: 'mp3spi', version: '1.9.5.4'
     compileOnly "mcjty.theoneprobe:TheOneProbe-1.12:1.12-1.4.28-17"
 
     embed('com.squareup.okhttp3:okhttp:4.10.0') {

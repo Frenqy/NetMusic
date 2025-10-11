@@ -1,25 +1,25 @@
-package com.github.tartaricacid.netmusic.client.event;
-
-
-import com.github.tartaricacid.netmusic.NetMusic;
-import com.github.tartaricacid.netmusic.Tags;
-import com.github.tartaricacid.netmusic.client.audio.NetMusicSound;
-import net.minecraft.client.audio.ISound;
-import net.minecraftforge.client.event.sound.PlaySoundSourceEvent;
-import net.minecraftforge.fml.common.Mod;
-import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
-import net.minecraftforge.fml.relauncher.Side;
-import net.minecraftforge.fml.relauncher.SideOnly;
-
-import java.net.URL;
-
-@SideOnly(Side.CLIENT)
-@Mod.EventBusSubscriber(modid = Tags.MOD_ID, value = Side.CLIENT)
-public class PlayNetMusicEvent {
-    private static final float DEFAULT_VOLUME = 1.0f;
-    private static final float DEFAULT_DISTANCE = 16.0f;
-    private static final String DEFAULT_FORMAT = "mp3";
-
+//package com.github.tartaricacid.netmusic.client.event;
+//
+//
+//import com.github.tartaricacid.netmusic.NetMusic;
+//import com.github.tartaricacid.netmusic.Tags;
+//import com.github.tartaricacid.netmusic.client.audio.NetMusicSound;
+//import net.minecraft.client.audio.ISound;
+//import net.minecraftforge.client.event.sound.PlaySoundSourceEvent;
+//import net.minecraftforge.fml.common.Mod;
+//import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
+//import net.minecraftforge.fml.relauncher.Side;
+//import net.minecraftforge.fml.relauncher.SideOnly;
+//
+//import java.net.URL;
+//
+//@SideOnly(Side.CLIENT)
+//@Mod.EventBusSubscriber(modid = Tags.MOD_ID, value = Side.CLIENT)
+//public class PlayNetMusicEvent {
+//    private static final float DEFAULT_VOLUME = 1.0f;
+//    private static final float DEFAULT_DISTANCE = 16.0f;
+//    private static final String DEFAULT_FORMAT = "mp3";
+//
 //    @SubscribeEvent
 //    public static void onSoundPlay(PlaySoundSourceEvent event) {
 //        ISound sound = event.getSound();
@@ -41,4 +41,4 @@ public class PlayNetMusicEvent {
 //            }
 //        }
 //    }
-}
+//}
