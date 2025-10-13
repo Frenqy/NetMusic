@@ -8,6 +8,8 @@ import com.github.tartaricacid.netmusic.client.audio.NetMusicSound;
 import io.netty.buffer.ByteBuf;
 import net.minecraft.client.Minecraft;
 import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.text.ChatType;
+import net.minecraft.util.text.TextComponentTranslation;
 import net.minecraftforge.fml.client.FMLClientHandler;
 import net.minecraftforge.fml.common.network.ByteBufUtils;
 import net.minecraftforge.fml.common.network.simpleimpl.IMessage;
@@ -74,7 +76,7 @@ public class MusicToClientMessage implements IMessage {
         @SideOnly(Side.CLIENT)
         public IMessage onMessage(MusicToClientMessage message, MessageContext ctx) {
             if (ctx.side == Side.CLIENT) {
-                String url = message.url;
+                String url = null;
 
                 long id = message.songId;
                 if (id != 0) {
@@ -89,8 +91,11 @@ public class MusicToClientMessage implements IMessage {
                         e.printStackTrace();
                     }
                 }
+
                 if (url != null && !url.equals(ERROR_404)) {
                     playerMusic(message, url);
+                } else {
+                    Minecraft.getMinecraft().ingameGUI.addChatMessage(ChatType.SYSTEM, new TextComponentTranslation("message.netmusic.music_cd.play.fail"));
                 }
             }
             return null;

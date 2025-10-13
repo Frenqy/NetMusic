@@ -1,11 +1,13 @@
 package com.github.tartaricacid.netmusic.client.command;
 
+import com.github.tartaricacid.netmusic.NetMusic;
 import com.github.tartaricacid.netmusic.client.config.MusicListManage;
 import com.github.tartaricacid.netmusic.item.ItemMusicCD;
 import com.github.tartaricacid.netmusic.network.GiveDiscMessage;
 import com.github.tartaricacid.netmusic.proxy.CommonProxy;
 import net.minecraft.command.CommandBase;
 import net.minecraft.command.ICommandSender;
+import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.text.Style;
@@ -25,7 +27,7 @@ public class NetMusicCommand extends CommandBase {
 
     @Override
     public String getUsage(ICommandSender sender) {
-        return "/netmusic <reload|get163|get163cd>";
+        return "/netmusic <reload|get163|get163cd|cookie>";
     }
 
     @Override
@@ -38,6 +40,12 @@ public class NetMusicCommand extends CommandBase {
                 e.printStackTrace();
             }
             return;
+        }
+
+        if (args.length == 1 && args[0].equals("cookie")){
+            if (sender instanceof EntityPlayer && ((EntityPlayer) sender).world.isRemote){
+                NetMusic.loadRawCookie();
+            }
         }
 
         if (args.length == 2) {
@@ -77,7 +85,7 @@ public class NetMusicCommand extends CommandBase {
     @Override
     public List<String> getTabCompletions(MinecraftServer server, ICommandSender sender, String[] args, @Nullable BlockPos targetPos) {
         if (args.length == 1) {
-            return getListOfStringsMatchingLastWord(args, "reload", "get163", "get163cd");
+            return getListOfStringsMatchingLastWord(args, "reload", "get163", "get163cd", "cookie");
         }
         return Collections.emptyList();
     }

@@ -120,7 +120,8 @@ public class NetMusic implements AllMusicBridge {
         }
     }
 
-    private static void loadConfig(){
+    @SideOnly(Side.CLIENT)
+    public static void loadConfig(){
         try{
             File cookieFile = new File(configDir, "netmusic_cookie.json");
 
@@ -139,7 +140,8 @@ public class NetMusic implements AllMusicBridge {
         }
     }
 
-    private static void loadRawCookie(){
+    @SideOnly(Side.CLIENT)
+    public static void loadRawCookie(){
         File cookieFile = new File(configDir, "netmusic_raw_cookie.txt");
         String cookieStr = "";
         try {
@@ -161,18 +163,18 @@ public class NetMusic implements AllMusicBridge {
             for (String item : cookies) {
                 String[] cookieitem = item.split("=");
                 if (cookieitem.length == 1) {
-                    if (list1.containsKey(cookieitem[0])) {
+                    if (list1.containsKey(cookieitem[0].trim())) {
                         continue;
                     }
-                    list1.put(cookieitem[0], new Cookie.Builder()
-                            .name(cookieitem[0])
+                    list1.put(cookieitem[0].trim(), new Cookie.Builder()
+                            .name(cookieitem[0].trim())
                             .domain("163.com")
                             .expiresAt(Long.MAX_VALUE)
                             .build());
                 } else {
-                    list1.put(cookieitem[0], new Cookie.Builder()
-                            .name(cookieitem[0])
-                            .value(cookieitem[1])
+                    list1.put(cookieitem[0].trim(), new Cookie.Builder()
+                            .name(cookieitem[0].trim())
+                            .value(cookieitem[1].trim())
                             .domain("163.com")
                             .expiresAt(Long.MAX_VALUE)
                             .build());
@@ -181,6 +183,17 @@ public class NetMusic implements AllMusicBridge {
             cookie = new CookieObj();
             cookie.cookieStore.put("music.163.com", new ArrayList<>(list1.values()));
             saveCookie();
+
+            // clear raw cookie file content
+            try{
+                FileOutputStream out = new FileOutputStream(cookieFile);
+                OutputStreamWriter write = new OutputStreamWriter(
+                        out, StandardCharsets.UTF_8);
+                write.write("");
+                write.close();
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
         }
     }
 

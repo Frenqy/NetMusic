@@ -11,6 +11,7 @@ tile.netmusic.cd_burner.name=唱片刻录机
 message.netmusic.music_player.need_vip=这首歌曲是 VIP 歌曲，无法播放
 message.netmusic.music_player.playing=正在播放:
 message.netmusic.music_player.empty=空
+message.netmusic.music_cd.play.fail=播放歌曲失败，请检查 url 或 cookie 是否正确
 subtitle.netmusic.block.music_player=唱片机声
 
 command.netmusic.music_cd.reload=用法：/netmusic <reload|get163|get163cd>
@@ -22,5 +23,6 @@ command.netmusic.music_cd.add163cd.fail=添加网易云单曲失败！请检查�
 
 gui.netmusic.cd_burner.craft=制作唱片
 gui.netmusic.cd_burner.id.tips=输入歌曲ID
-gui.netmusic.cd_burner.no_music_id=歌曲ID不能为空，请输入数字形式的歌曲ID！
-gui.netmusic.cd_burner.get_info_error=The song information cannot be obtained, please check the song ID or network"gui.netmusic.cd_burner.music_id_error
+gui.netmusic.cd_burner.no_music_id=The song ID cannot be empty, please enter the song ID as a number!
+gui.netmusic.cd_burner.music_id_error=The song ID format is incorrect,  please enter the song ID as a number!
+gui.netmusic.cd_burner.get_info_error=The song information cannot be obtained, please check the song ID or network"
