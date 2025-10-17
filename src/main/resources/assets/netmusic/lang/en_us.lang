@@ -14,7 +14,7 @@ message.netmusic.music_player.empty=Empty
 message.netmusic.music_cd.play.fail=Failed to play the song, please check if the url or cookie is correct
 subtitle.netmusic.block.music_player=Music Player Sound
 
-command.netmusic.music_cd.reload=Usage: /netmusic <reload|get163|get163cd>
+command.netmusic.music_cd.reload=Usage: /netmusic <reload|get163|get163cd|cookie>
 command.netmusic.music_cd.reload.success=All CD is reloaded!
 command.netmusic.music_cd.add163.success=Add NetEase music list success!
 command.netmusic.music_cd.add163.fail=Add NetEase music list fail! Please check if the playlist ID is mistyped?

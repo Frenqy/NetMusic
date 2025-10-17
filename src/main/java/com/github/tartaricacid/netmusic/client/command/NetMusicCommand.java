@@ -46,6 +46,7 @@ public class NetMusicCommand extends CommandBase {
             if (sender instanceof EntityPlayer && ((EntityPlayer) sender).world.isRemote){
                 NetMusic.loadRawCookie();
             }
+            return;
         }
 
         if (args.length == 2) {

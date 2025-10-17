@@ -120,7 +120,6 @@ public class NetMusic implements AllMusicBridge {
         }
     }
 
-    @SideOnly(Side.CLIENT)
     public static void loadConfig(){
         try{
             File cookieFile = new File(configDir, "netmusic_cookie.json");
@@ -140,7 +139,6 @@ public class NetMusic implements AllMusicBridge {
         }
     }
 
-    @SideOnly(Side.CLIENT)
     public static void loadRawCookie(){
         File cookieFile = new File(configDir, "netmusic_raw_cookie.txt");
         String cookieStr = "";
