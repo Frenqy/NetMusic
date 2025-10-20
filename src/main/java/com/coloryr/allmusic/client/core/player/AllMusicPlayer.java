@@ -125,6 +125,18 @@ public class AllMusicPlayer extends InputStream {
         while (true) {
             try {
                 semaphore.acquire();
+
+                if (index == -1) {
+                    index = AL10.alGenSources();
+                    if (index == 0 && source != null) {
+                        index = source.get(0);
+                        if (index == 0) {
+                            AllMusicCore.bridge.sendMessage("音频源创建失败");
+                            return;
+                        }
+                    }
+                }
+
                 url = urls.poll();
                 if (url == null || url.isEmpty()) continue;
                 urls.clear();
@@ -135,36 +147,21 @@ public class AllMusicPlayer extends InputStream {
                     connect();
                 } catch (Exception e) {
                     e.printStackTrace();
-                    AllMusicCore.bridge.sendMessage("[AllMusic客户端]获取音乐失败");
+                    AllMusicCore.bridge.sendMessage("获取音乐失败");
                     continue;
                 }
 
-//                decoder = new FlacDecoder(this);
-//                if (!decoder.set()) {
-//                    local = 0;
-//                    connect();
-//                    decoder = new OggDecoder(this);
-//                    if (!decoder.set()) {
-//                        local = 0;
-//                        connect();
-//                        decoder = new Mp3Decoder(this);
-//                        if (!decoder.set()) {
-//                            AllMusicCore.bridge.sendMessage("[AllMusic客户端]不支持这样的文件播放");
-//                            continue;
-//                        }
-//                    }
-//                }
-                decoder = new Mp3Decoder(this);
+                decoder = new FlacDecoder(this);
                 if (!decoder.set()) {
                     local = 0;
                     connect();
-                    decoder = new FlacDecoder(this);
+                    decoder = new OggDecoder(this);
                     if (!decoder.set()) {
                         local = 0;
                         connect();
-                        decoder = new OggDecoder(this);
+                        decoder = new Mp3Decoder(this);
                         if (!decoder.set()) {
-                            AllMusicCore.bridge.sendMessage("[AllMusic客户端]不支持这样的文件播放");
+                            AllMusicCore.bridge.sendMessage("不支持这样的文件播放");
                             continue;
                         }
                     }
@@ -189,12 +186,6 @@ public class AllMusicPlayer extends InputStream {
                 while (true) {
                     try {
                         if (isClose) break;
-                        if (index == -1) {
-                            index = AL10.alGenSources();
-                            if(index == 0 && source != null) {
-                                index = source.get(0);
-                            }
-                        }
                         while (AL10.alGetSourcei(index, AL10.AL_BUFFERS_QUEUED) < AllMusicCore.config.queueSize) {
                             BuffPack output = decoder.decodeFrame();
                             if (output == null) break;
