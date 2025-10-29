@@ -81,22 +81,28 @@ public class MusicToClientMessage implements IMessage {
                 long id = message.songId;
                 if (id != 0) {
                     url = HttpClientUtil.getPlayUrl(String.valueOf(id));
-                    NetMusic.LOGGER.info("获取VIP播放: " + url);
+                    NetMusic.LOGGER.debug("获取VIP播放地址: " + url);
                 }
 
-                if (url == null && message.url.startsWith("https://music.163.com/")) {
-                    try {
-                        url = NetWorker.getRedirectUrl(message.url, NetMusic.NET_EASE_WEB_API.getRequestPropertyData());
-                        NetMusic.LOGGER.info("使用预设播放地址: " + url);
-                    } catch (IOException e) {
-                        e.printStackTrace();
+                if (url == null) {
+                    if (message.url.startsWith("https://music.163.com/")){
+                        try {
+                            url = NetWorker.getRedirectUrl(message.url, NetMusic.NET_EASE_WEB_API.getRequestPropertyData());
+                            NetMusic.LOGGER.debug("获取网易播放地址: " + url);
+                        } catch (IOException e) {
+                            e.printStackTrace();
+                        }
+                    } else {
+                        url = message.url;
+                        NetMusic.LOGGER.debug("使用预设外链地址: " + url);
                     }
                 }
 
                 if (url != null && !url.equals(ERROR_404)) {
                     playerMusic(message, url);
-                    NetMusic.LOGGER.info("正在播放音乐: " + message.songName + " , 地址: " + url);
+                    NetMusic.LOGGER.debug("正在播放音乐: " + message.songName);
                 } else {
+                    NetMusic.LOGGER.error("音乐播放失败: " + message.songName);
                     Minecraft.getMinecraft().ingameGUI.addChatMessage(ChatType.SYSTEM, new TextComponentTranslation("message.netmusic.music_cd.play.fail"));
                 }
             }

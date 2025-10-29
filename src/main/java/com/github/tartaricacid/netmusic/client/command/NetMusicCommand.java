@@ -90,4 +90,9 @@ public class NetMusicCommand extends CommandBase {
         }
         return Collections.emptyList();
     }
+
+    @Override
+    public int getRequiredPermissionLevel() {
+        return 0;
+    }
 }
