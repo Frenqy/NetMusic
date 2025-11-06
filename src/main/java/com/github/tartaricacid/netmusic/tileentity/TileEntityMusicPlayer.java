@@ -7,6 +7,7 @@ import com.github.tartaricacid.netmusic.item.ItemMusicCD;
 import com.github.tartaricacid.netmusic.network.NetworkHandler;
 import com.github.tartaricacid.netmusic.network.message.MusicToClientMessage;
 import net.minecraft.block.BlockState;
+import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.network.NetworkManager;
 import net.minecraft.network.play.server.SUpdateTileEntityPacket;
@@ -23,6 +24,7 @@ import net.minecraftforge.items.ItemStackHandler;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
+import java.util.List;
 
 public class TileEntityMusicPlayer extends TileEntity implements ITickableTileEntity {
     public static final TileEntityType<TileEntityMusicPlayer> TYPE = TileEntityType.Builder.of(TileEntityMusicPlayer::new, InitBlocks.MUSIC_PLAYER.get()).build(null);
@@ -173,6 +175,50 @@ public class TileEntityMusicPlayer extends TileEntity implements ITickableTileEn
         if (0 < this.getCurrentTime() && this.getCurrentTime() < 16 && this.getCurrentTime() % 5 == 0) {
             this.setPlay(false);
             this.markDirty();
+
+            // push item to down block
+            TileEntity blockEntityDown = this.getLevel().getBlockEntity(this.getBlockPos().below());
+            if (blockEntityDown != null) {
+                blockEntityDown.getCapability(CapabilityItemHandler.ITEM_HANDLER_CAPABILITY).ifPresent(handler -> {
+                    ItemStack stack = this.getPlayerInv().extractItem(0, 1, false);
+                    if (!stack.isEmpty()) {
+                        handler.insertItem(0, stack, false);
+                    }
+                });
+            }
+
+            // pull item from top block
+            TileEntity blockEntityTop = this.getLevel().getBlockEntity(this.getBlockPos().above());
+            if (blockEntityTop != null) {
+                blockEntityTop.getCapability(CapabilityItemHandler.ITEM_HANDLER_CAPABILITY).ifPresent(handler -> {
+                    // find all slots with item
+                    List<Integer> slots = new java.util.ArrayList<>();
+                    for (int i = 0; i < handler.getSlots(); i++) {
+                        ItemStack stack = handler.getStackInSlot(i);
+                        if (!stack.isEmpty() && stack.getItem() instanceof ItemMusicCD) {
+                            slots.add(i);
+                        }
+                    }
+                    // extract item from random slot
+                    if (!slots.isEmpty()) {
+                        // get random slot
+                        int slot = slots.get(level.random.nextInt(slots.size()));
+                        ItemStack stack = handler.extractItem(slot, 1, false);
+                        if (!stack.isEmpty()) {
+                            this.getPlayerInv().insertItem(0, stack, false);
+                        }
+                    }
+                });
+            }
+
+            ItemStack stackInSlot = this.getPlayerInv().getStackInSlot(0);
+            if (stackInSlot.isEmpty()) {
+                return;
+            }
+            ItemMusicCD.SongInfo songInfo = ItemMusicCD.getSongInfo(stackInSlot);
+            if (songInfo != null) {
+                this.setPlayToClient(songInfo);
+            }
         }
     }
 }
