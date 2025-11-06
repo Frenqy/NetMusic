@@ -17,7 +17,7 @@ apply plugin: 'eclipse'
 apply plugin: 'com.github.johnrengelman.shadow'
 apply plugin: 'java'
 
-version = '1.1.3'
+version = '2.0.0'
 group = 'com.github.tartaricacid'
 archivesBaseName = 'netmusic-1.16.5'
 
@@ -104,6 +104,10 @@ repositories {
             includeGroup "curse.maven"
         }
     }
+    maven {
+        name = 'kotlinforforge'
+        url = 'https://thedarkcolour.github.io/KotlinForForge/'
+    }
 }
 
 dependencies {
@@ -119,6 +123,10 @@ dependencies {
     runtimeOnly "curse.maven:kotlin-for-forge-351264:3675495"
     runtimeOnly fg.deobf("curse.maven:libipn-679177:4574569")
     implementation fg.deobf("curse.maven:inventory-profiles-next-495267:4753602")
+
+    implementation 'thedarkcolour:kotlinforforge:1.16.0'
+
+    shadow 'com.squareup.okhttp3:okhttp:4.10.0'
 }
 
 tasks.withType(JavaCompile) {
@@ -130,6 +138,9 @@ shadowJar {
         include(dependency("com.googlecode.soundlibs:mp3spi:1.9.5.4"))
         include(dependency("com.googlecode.soundlibs:jlayer:1.0.1.4"))
         include(dependency("com.googlecode.soundlibs:tritonus-share:0.3.7.4"))
+
+        include(dependency('com.squareup.okhttp3:okhttp:4.10.0'))
+        include(dependency('com.squareup.okio:okio-jvm:3.0.0'))
     }
 
     relocate 'javazoom.jl', 'com.github.tartaricacid.netmusic.soundlibs.javazoom.jl'

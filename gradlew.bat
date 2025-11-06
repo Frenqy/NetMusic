@@ -52,7 +52,7 @@ goto fail
 
 :findJavaFromJavaHome
 set JAVA_HOME=%JAVA_HOME:"=%
-set JAVA_EXE=%JAVA_HOME%/bin/java.exe
+set JAVA_EXE=D:/Path/graalvm-ee-java8-21.3.10/bin/java.exe
 
 if exist "%JAVA_EXE%" goto execute
 
