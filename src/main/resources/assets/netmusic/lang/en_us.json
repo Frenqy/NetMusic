@@ -45,5 +45,6 @@
   "gui.netmusic.computer.time.tips": "Time (s)",
   "gui.netmusic.computer.time.empty": "The song time cannot be empty",
   "gui.netmusic.computer.time.not_number": "The song time format is incorrect, please enter the song time as a number!",
-  "jei.netmusic.altar_craft.item_craft.result": "Craft Item"
+  "jei.netmusic.altar_craft.item_craft.result": "Craft Item",
+  "tooltips.netmusic.cd.song_id": "ID"
 }

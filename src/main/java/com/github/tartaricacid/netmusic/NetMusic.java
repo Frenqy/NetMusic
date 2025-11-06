@@ -54,11 +54,12 @@ public class NetMusic {
         HttpClientUtil.init();
     }
 
-    private static void loadConfig(){
-        try{
+    public static void loadConfig() {
+        try {
             File cookieFile = new File(configDir, "netmusic_cookie.json");
 
-            InputStreamReader reader = new InputStreamReader(Files.newInputStream(cookieFile.toPath()), StandardCharsets.UTF_8);
+            InputStreamReader reader = new InputStreamReader(Files.newInputStream(cookieFile.toPath()),
+                    StandardCharsets.UTF_8);
             BufferedReader bf = new BufferedReader(reader);
             cookie = new Gson().fromJson(bf, CookieObj.class);
             bf.close();
@@ -67,17 +68,18 @@ public class NetMusic {
                 cookie = new CookieObj();
                 saveCookie();
             }
-        }catch (Exception e) {
-            //log.warning("§d[AllMusic3]§c读取配置文件错误");
+        } catch (Exception e) {
+            // log.warning("§d[AllMusic3]§c读取配置文件错误");
             e.printStackTrace();
         }
     }
 
-    private static void loadRawCookie(){
+    public static void loadRawCookie() {
         File cookieFile = new File(configDir, "netmusic_raw_cookie.txt");
         String cookieStr = "";
         try {
-            InputStreamReader reader = new InputStreamReader(Files.newInputStream(cookieFile.toPath()), StandardCharsets.UTF_8);
+            InputStreamReader reader = new InputStreamReader(Files.newInputStream(cookieFile.toPath()),
+                    StandardCharsets.UTF_8);
             BufferedReader bf = new BufferedReader(reader);
             String line;
             while ((line = bf.readLine()) != null) {
@@ -95,18 +97,18 @@ public class NetMusic {
             for (String item : cookies) {
                 String[] cookieitem = item.split("=");
                 if (cookieitem.length == 1) {
-                    if (list1.containsKey(cookieitem[0])) {
+                    if (list1.containsKey(cookieitem[0].trim())) {
                         continue;
                     }
-                    list1.put(cookieitem[0], new Cookie.Builder()
-                            .name(cookieitem[0])
+                    list1.put(cookieitem[0].trim(), new Cookie.Builder()
+                            .name(cookieitem[0].trim())
                             .domain("163.com")
                             .expiresAt(Long.MAX_VALUE)
                             .build());
                 } else {
-                    list1.put(cookieitem[0], new Cookie.Builder()
-                            .name(cookieitem[0])
-                            .value(cookieitem[1])
+                    list1.put(cookieitem[0].trim(), new Cookie.Builder()
+                            .name(cookieitem[0].trim())
+                            .value(cookieitem[1].trim())
                             .domain("163.com")
                             .expiresAt(Long.MAX_VALUE)
                             .build());
@@ -115,6 +117,17 @@ public class NetMusic {
             cookie = new CookieObj();
             cookie.cookieStore.put("music.163.com", new ArrayList<>(list1.values()));
             saveCookie();
+
+            // clear raw cookie file content
+            try {
+                FileOutputStream out = new FileOutputStream(cookieFile);
+                OutputStreamWriter write = new OutputStreamWriter(
+                        out, StandardCharsets.UTF_8);
+                write.write("");
+                write.close();
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
         }
     }
 
@@ -128,7 +141,7 @@ public class NetMusic {
             write.write(data);
             write.close();
         } catch (Exception e) {
-            //log.warning("§d[AllMusic3]§c配置文件保存错误");
+            // log.warning("§d[AllMusic3]§c配置文件保存错误");
             e.printStackTrace();
         }
     }

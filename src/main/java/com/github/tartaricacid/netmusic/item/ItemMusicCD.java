@@ -80,6 +80,10 @@ public class ItemMusicCD extends Item {
         final String prefix = "§a▍ §7";
         final String delimiter = ": ";
         if (info != null) {
+            if(info.songId != 0) {
+                String text = prefix + I18n.get("tooltips.netmusic.cd.song_id") + delimiter + "§9" + info.songId;
+                tooltip.add(Component.literal(text));
+            }
             if (StringUtils.isNoneBlank(info.transName)) {
                 String text = prefix + I18n.get("tooltips.netmusic.cd.trans_name") + delimiter + "§6" + info.transName;
                 tooltip.add(Component.literal(text));
