@@ -20,6 +20,7 @@ command.netmusic.music_cd.add163.success=Add NetEase music list success!
 command.netmusic.music_cd.add163.fail=Add NetEase music list fail! Please check if the playlist ID is mistyped?
 command.netmusic.music_cd.add163cd.success=Add NetEase music success!
 command.netmusic.music_cd.add163cd.fail=Add NetEase music fail! Please check if the music ID is mistyped?
+command.netmusic.music_cd.cookie.success=Set NetEase cookie success!
 
 gui.netmusic.cd_burner.craft=Craft CD
 gui.netmusic.cd_burner.id.tips=Enter the song ID
