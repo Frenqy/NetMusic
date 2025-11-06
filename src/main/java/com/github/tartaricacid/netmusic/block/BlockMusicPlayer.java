@@ -95,12 +95,6 @@ public class BlockMusicPlayer extends HorizontalBlock {
         if (info == null) {
             return ActionResultType.PASS;
         }
-        if (info.vip) {
-            if (worldIn.isClientSide) {
-                playerIn.sendMessage(new TranslationTextComponent("message.netmusic.music_player.need_vip").withStyle(TextFormatting.RED), Util.NIL_UUID);
-            }
-            return ActionResultType.FAIL;
-        }
 
         handler.insertItem(0, stack.copy(), false);
         if (!playerIn.isCreative()) {

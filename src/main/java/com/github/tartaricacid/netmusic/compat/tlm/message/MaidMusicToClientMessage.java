@@ -19,16 +19,18 @@ public class MaidMusicToClientMessage {
     private final String url;
     private final int timeSecond;
     private final String songName;
+    private final long songId;
 
-    public MaidMusicToClientMessage(int entityId, String url, int timeSecond, String songName) {
+    public MaidMusicToClientMessage(int entityId, String url, int timeSecond, String songName, long songId) {
         this.entityId = entityId;
         this.url = url;
         this.timeSecond = timeSecond;
         this.songName = songName;
+        this.songId = songId;
     }
 
     public static MaidMusicToClientMessage decode(PacketBuffer buf) {
-        return new MaidMusicToClientMessage(buf.readInt(), buf.readUtf(), buf.readInt(), buf.readUtf());
+        return new MaidMusicToClientMessage(buf.readInt(), buf.readUtf(), buf.readInt(), buf.readUtf(), buf.readLong());
     }
 
     public static void encode(MaidMusicToClientMessage message, PacketBuffer buf) {
@@ -36,6 +38,7 @@ public class MaidMusicToClientMessage {
         buf.writeUtf(message.url);
         buf.writeInt(message.timeSecond);
         buf.writeUtf(message.songName);
+        buf.writeLong(message.songId);
     }
 
     public static void handle(MaidMusicToClientMessage message, Supplier<NetworkEvent.Context> contextSupplier) {
@@ -56,6 +59,6 @@ public class MaidMusicToClientMessage {
             return;
         }
         EntityMaid maid = (EntityMaid) entity;
-        MusicPlayManager.play(message.url, message.songName, url -> new MaidNetMusicSound(maid, url, message.timeSecond));
+        MusicPlayManager.play(message.url, message.songName, message.songId, url -> new MaidNetMusicSound(maid, url, message.timeSecond));
     }
 }
