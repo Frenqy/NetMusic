@@ -91,7 +91,11 @@ public class CDBurnerMenu extends AbstractContainerMenu {
 
     public void setSongInfo(ItemMusicCD.SongInfo setSongInfo) {
         this.songInfo = setSongInfo;
-        if (!this.input.getStackInSlot(0).isEmpty() && this.output.getStackInSlot(0).isEmpty()) {
+        if (this.output.getStackInSlot(0).isEmpty()) {
+            if (this.input.getStackInSlot(0).isEmpty()) {
+                this.input.insertItem(0, new ItemStack(InitItems.MUSIC_CD.get()), false);
+            }
+
             ItemStack itemStack = this.input.extractItem(0, 1, false);
             ItemMusicCD.SongInfo rawSongInfo = ItemMusicCD.getSongInfo(itemStack);
             if (rawSongInfo == null || !rawSongInfo.readOnly) {

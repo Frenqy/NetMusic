@@ -102,7 +102,7 @@ public class CDBurnerMenuScreen extends AbstractContainerScreen<CDBurnerMenu> {
 
     private void handleCraftButton() {
         ItemStack cd = this.getMenu().getInput().getStackInSlot(0);
-        if (cd.isEmpty()) {
+        if (!this.minecraft.player.getAbilities().instabuild && cd.isEmpty()) {
             this.tips = Component.translatable("gui.netmusic.cd_burner.cd_is_empty");
             return;
         }
