@@ -1,5 +1,7 @@
 package com.github.tartaricacid.netmusic;
 
+import com.coloryr.allmusic.client.core.AllMusicBridge;
+import com.coloryr.allmusic.client.core.AllMusicCore;
 import com.coloryr.allmusic.client.core.HttpClientUtil;
 import com.coloryr.allmusic.client.core.objs.CookieObj;
 import com.github.tartaricacid.netmusic.api.NetEaseMusic;
@@ -12,7 +14,18 @@ import com.github.tartaricacid.netmusic.init.InitSounds;
 import com.github.tartaricacid.netmusic.network.NetworkHandler;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
+import net.minecraft.client.Minecraft;
+import net.minecraft.util.SoundCategory;
+import net.minecraft.util.text.StringTextComponent;
+import net.minecraftforge.api.distmarker.Dist;
+import net.minecraftforge.api.distmarker.OnlyIn;
+import net.minecraftforge.client.event.ClientPlayerNetworkEvent;
+import net.minecraftforge.client.event.sound.SoundEvent;
+import net.minecraftforge.common.MinecraftForge;
+import net.minecraftforge.event.TickEvent;
+import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.DeferredWorkQueue;
+import net.minecraftforge.fml.DistExecutor;
 import net.minecraftforge.fml.ModLoadingContext;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.config.ModConfig;
@@ -30,7 +43,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 @Mod(NetMusic.MOD_ID)
-public class NetMusic {
+public class NetMusic implements AllMusicBridge {
     public static final String MOD_ID = "netmusic";
     public static final Logger LOGGER = LogManager.getLogger(MOD_ID);
     public static WebApi NET_EASE_WEB_API;
@@ -48,10 +61,18 @@ public class NetMusic {
         ModLoadingContext.get().registerConfig(ModConfig.Type.COMMON, GeneralConfig.init());
         DeferredWorkQueue.runLater(NetworkHandler::init);
 
+        MinecraftForge.EVENT_BUS.register(this);
+
         configDir = FMLPaths.CONFIGDIR.get().toFile();
         loadRawCookie();
         loadConfig();
+
+        DistExecutor.unsafeRunWhenOn(Dist.CLIENT, () -> this::InitAllMusicCore);
         HttpClientUtil.init();
+    }
+
+    private void InitAllMusicCore() {
+        AllMusicCore.init(FMLPaths.CONFIGDIR.get(), this);
     }
 
     public static void loadConfig(){
@@ -142,5 +163,47 @@ public class NetMusic {
             //log.warning("§d[AllMusic3]§c配置文件保存错误");
             e.printStackTrace();
         }
+    }
+
+    @Override
+    public void sendMessage(String data) {
+        Minecraft.getInstance().execute(() -> {
+            Minecraft.getInstance().gui.getChat().addMessage(new StringTextComponent(data));
+        });
+    }
+
+    @Override
+    public float getVolume() {
+        return Minecraft.getInstance().options.getSoundSourceVolume(SoundCategory.RECORDS);
+    }
+
+    @Override
+    public void stopPlayMusic() {
+        Minecraft.getInstance().getSoundManager().stop(null, SoundCategory.MUSIC);
+        Minecraft.getInstance().getSoundManager().stop(null, SoundCategory.RECORDS);
+    }
+
+    @SubscribeEvent
+    @OnlyIn(Dist.CLIENT)
+    public void onSound(final SoundEvent.SoundSourceEvent e) {
+        if (!AllMusicCore.isPlay()) return;
+        SoundCategory data = e.getSound().getSource();
+        switch (data) {
+            case MUSIC:
+            case RECORDS:
+                e.getSource().stop();
+        }
+    }
+
+    @SubscribeEvent
+    @OnlyIn(Dist.CLIENT)
+    public void onServerQuit(final ClientPlayerNetworkEvent.LoggedOutEvent e) {
+        AllMusicCore.onServerQuit();
+    }
+
+    @SubscribeEvent
+    @OnlyIn(Dist.CLIENT)
+    public void onTick(TickEvent.ClientTickEvent event){
+        AllMusicCore.tick();
     }
 }

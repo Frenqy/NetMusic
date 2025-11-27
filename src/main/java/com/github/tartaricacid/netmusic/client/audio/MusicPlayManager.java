@@ -1,5 +1,6 @@
 package com.github.tartaricacid.netmusic.client.audio;
 
+import com.coloryr.allmusic.client.core.AllMusicCore;
 import com.coloryr.allmusic.client.core.HttpClientUtil;
 import com.github.tartaricacid.netmusic.NetMusic;
 import com.github.tartaricacid.netmusic.api.NetWorker;
@@ -61,7 +62,8 @@ public final class MusicPlayManager {
                 }
             }
             Minecraft.getInstance().submitAsync(() -> {
-                Minecraft.getInstance().getSoundManager().play(sound.apply(urlFinal));
+                //Minecraft.getInstance().getSoundManager().play(sound.apply(urlFinal));
+                AllMusicCore.SetMusic(url);
                 Minecraft.getInstance().gui.setNowPlaying(new StringTextComponent(songName));
             });
         } catch (MalformedURLException | URISyntaxException e) {
