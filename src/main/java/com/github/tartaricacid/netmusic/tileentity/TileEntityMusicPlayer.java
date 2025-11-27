@@ -18,6 +18,7 @@ import net.minecraft.util.Direction;
 import net.minecraftforge.common.capabilities.Capability;
 import net.minecraftforge.common.util.Constants;
 import net.minecraftforge.common.util.LazyOptional;
+import net.minecraftforge.fml.network.PacketDistributor;
 import net.minecraftforge.items.CapabilityItemHandler;
 import net.minecraftforge.items.IItemHandler;
 import net.minecraftforge.items.ItemStackHandler;
@@ -126,7 +127,10 @@ public class TileEntityMusicPlayer extends TileEntity implements ITickableTileEn
         this.isPlay = true;
         if (level != null && !level.isClientSide) {
             MusicToClientMessage msg = new MusicToClientMessage(worldPosition, info.songUrl, info.songTime, info.songName, info.songId);
-            NetworkHandler.sendToNearby(level, worldPosition, msg);
+            // send to all players
+            level.getServer().getPlayerList().getPlayers().forEach(player -> {
+                NetworkHandler.CHANNEL.send(PacketDistributor.PLAYER.with(() -> player), msg);
+            });
         }
     }
 

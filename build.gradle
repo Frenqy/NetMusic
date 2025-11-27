@@ -17,7 +17,7 @@ apply plugin: 'eclipse'
 apply plugin: 'com.github.johnrengelman.shadow'
 apply plugin: 'java'
 
-version = '2.0.0'
+version = '2.0.4'
 group = 'com.github.tartaricacid'
 archivesBaseName = 'netmusic-1.16.5'
 
@@ -126,7 +126,7 @@ dependencies {
 
     implementation 'thedarkcolour:kotlinforforge:1.16.0'
 
-    shadow 'com.squareup.okhttp3:okhttp:4.10.0'
+    implementation 'com.squareup.okhttp3:okhttp:4.10.0'
 }
 
 tasks.withType(JavaCompile) {
@@ -134,6 +134,8 @@ tasks.withType(JavaCompile) {
 }
 
 shadowJar {
+    configurations = [project.configurations.runtimeClasspath]
+
     dependencies {
         include(dependency("com.googlecode.soundlibs:mp3spi:1.9.5.4"))
         include(dependency("com.googlecode.soundlibs:jlayer:1.0.1.4"))
@@ -141,11 +143,17 @@ shadowJar {
 
         include(dependency('com.squareup.okhttp3:okhttp:4.10.0'))
         include(dependency('com.squareup.okio:okio-jvm:3.0.0'))
+        include(dependency('org.jetbrains.kotlin:kotlin-stdlib:.*'))
+        include(dependency('org.jetbrains.kotlin:kotlin-stdlib-common:.*'))
     }
 
     relocate 'javazoom.jl', 'com.github.tartaricacid.netmusic.soundlibs.javazoom.jl'
     relocate 'javazoom.spi', 'com.github.tartaricacid.netmusic.soundlibs.javazoom.spi'
     relocate 'org.tritonus', 'com.github.tartaricacid.netmusic.soundlibs.org.tritonus'
+
+    relocate 'okhttp3', 'com.coloryr.allmusic.server.lib.okhttp3'
+    relocate 'okio', 'com.coloryr.allmusic.server.lib.okio'
+    relocate 'kotlin', 'com.coloryr.allmusic.server.lib.kotlin'
 
     mergeServiceFiles()
 }
