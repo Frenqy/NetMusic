@@ -1,6 +1,7 @@
 package com.github.tartaricacid.netmusic.client.event;
 
 import com.github.tartaricacid.netmusic.NetMusic;
+import com.github.tartaricacid.netmusic.api.ISeekableSound;
 import com.github.tartaricacid.netmusic.api.IUrlSound;
 import com.github.tartaricacid.netmusic.client.audio.Mp3AudioStream;
 import net.minecraft.client.audio.*;
@@ -29,23 +30,27 @@ public class PlayNetMusicEvent {
         ISound sound = event.getSound();
         if (sound instanceof IUrlSound) {
             URL songUrl = ((IUrlSound) sound).getSongUrl();
-            play(sound, event.getManager(), songUrl);
+            int startSeconds = 0;
+            if (sound instanceof ISeekableSound) {
+                startSeconds = ((ISeekableSound) sound).getStartSeconds();
+            }
+            play(sound, event.getManager(), songUrl, startSeconds);
             event.setResultSound(null);
         }
     }
 
-    private static CompletableFuture<IAudioStream> getStream(URL url) {
+    private static CompletableFuture<IAudioStream> getStream(URL url, int startSeconds) {
         return CompletableFuture.supplyAsync(() -> {
             try {
-                return new Mp3AudioStream(url);
+                return new Mp3AudioStream(url, startSeconds);
             } catch (IOException | UnsupportedAudioFileException e) {
-                e.printStackTrace();
+                NetMusic.LOGGER.error("创建音频流失败", e);
             }
             return null;
         }, Util.backgroundExecutor());
     }
 
-    private static void play(ISound sound, SoundEngine engine, URL url) {
+    private static void play(ISound sound, SoundEngine engine, URL url, int startSeconds) {
         if (sound != null && sound.canPlaySound()) {
             SoundEventAccessor accessor = sound.resolve(engine.soundManager);
             ResourceLocation resourcelocation = sound.getLocation();
@@ -84,7 +89,7 @@ public class PlayNetMusicEvent {
                     soundSource.setSelfPosition(vector3d);
                     soundSource.setRelative(relative);
                 });
-                getStream(url).thenAccept((stream) -> entry.execute((source) -> {
+                getStream(url, startSeconds).thenAccept((stream) -> entry.execute((source) -> {
                     if (stream != null) {
                         source.attachBufferStream(stream);
                         source.play();

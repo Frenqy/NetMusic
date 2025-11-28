@@ -1,5 +1,6 @@
 package com.github.tartaricacid.netmusic.client.audio;
 
+import com.github.tartaricacid.netmusic.api.ISeekableSound;
 import com.github.tartaricacid.netmusic.api.IUrlSound;
 import com.github.tartaricacid.netmusic.init.InitSounds;
 import com.github.tartaricacid.netmusic.tileentity.TileEntityMusicPlayer;
@@ -13,13 +14,18 @@ import net.minecraft.world.World;
 
 import java.net.URL;
 
-public class NetMusicSound extends TickableSound implements IUrlSound {
+public class NetMusicSound extends TickableSound implements IUrlSound, ISeekableSound {
     private final URL songUrl;
     private final int tickTimes;
     private final BlockPos pos;
+    private final int startSeconds;
     private int tick;
 
     public NetMusicSound(BlockPos pos, URL songUrl, int timeSecond) {
+        this(pos, songUrl, timeSecond, 0);
+    }
+
+    public NetMusicSound(BlockPos pos, URL songUrl, int timeSecond, int startSeconds) {
         super(InitSounds.NET_MUSIC.get(), SoundCategory.RECORDS);
         this.songUrl = songUrl;
         this.x = pos.getX() + 0.5f;
@@ -29,6 +35,7 @@ public class NetMusicSound extends TickableSound implements IUrlSound {
         this.volume = 4.0f;
         this.tick = 0;
         this.pos = pos;
+        this.startSeconds = startSeconds;
     }
 
     @Override
@@ -66,5 +73,10 @@ public class NetMusicSound extends TickableSound implements IUrlSound {
     @Override
     public URL getSongUrl() {
         return songUrl;
+    }
+
+    @Override
+    public int getStartSeconds() {
+        return startSeconds;
     }
 }

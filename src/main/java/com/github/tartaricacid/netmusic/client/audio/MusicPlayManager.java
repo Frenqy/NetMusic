@@ -23,6 +23,10 @@ public final class MusicPlayManager {
     private static final String LOCAL_FILE_PROTOCOL = "file";
 
     public static void play(String url, String songName, long songId, Function<URL, ISound> sound) {
+        play(url, songName, songId, 0, sound);
+    }
+
+    public static void play(String url, String songName, long songId, int startSeconds, Function<URL, ISound> sound) {
         long id = songId;
         String vipUrl = null;
         if (id != 0) {
@@ -37,18 +41,18 @@ public final class MusicPlayManager {
                 url = NetWorker.getRedirectUrl(url, NetMusic.NET_EASE_WEB_API.getRequestPropertyData());
                 NetMusic.LOGGER.debug("获取网易播放地址: " + url);
             } catch (IOException e) {
-                e.printStackTrace();
+                NetMusic.LOGGER.error("获取网易播放地址失败", e);
             }
         } else {
             NetMusic.LOGGER.debug("使用原始播放地址: " + url);
         }
 
         if (url != null && !url.equals(ERROR_404)) {
-            playMusic(url, songName, sound);
+            playMusic(url, songName, startSeconds, sound);
         }
     }
 
-    private static void playMusic(String url, String songName, Function<URL, ISound> sound) {
+    private static void playMusic(String url, String songName, int startSeconds, Function<URL, ISound> sound) {
         final URL urlFinal;
         try {
             urlFinal = new URL(url);
@@ -60,12 +64,17 @@ public final class MusicPlayManager {
                     return;
                 }
             }
+
+            final int finalStartSeconds = startSeconds;
             Minecraft.getInstance().submitAsync(() -> {
                 Minecraft.getInstance().getSoundManager().play(sound.apply(urlFinal));
+                if (startSeconds > 0) {
+                    NetMusic.LOGGER.info("从 {} 秒处开始播放音乐: {}", startSeconds, songName);
+                }
                 Minecraft.getInstance().gui.setNowPlaying(new StringTextComponent(songName));
             });
         } catch (MalformedURLException | URISyntaxException e) {
-            e.printStackTrace();
+            NetMusic.LOGGER.error("播放音乐失败", e);
         }
     }
 }

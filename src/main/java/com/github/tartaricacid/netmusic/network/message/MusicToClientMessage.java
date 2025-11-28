@@ -18,17 +18,23 @@ public class MusicToClientMessage {
     private final int timeSecond;
     private final String songName;
     private final long songId;
+    private final int elapsedSeconds; // 已播放的秒数
 
     public MusicToClientMessage(BlockPos pos, String url, int timeSecond, String songName, long songId) {
+        this(pos, url, timeSecond, songName, songId, 0);
+    }
+
+    public MusicToClientMessage(BlockPos pos, String url, int timeSecond, String songName, long songId, int elapsedSeconds) {
         this.pos = pos;
         this.url = url;
         this.timeSecond = timeSecond;
         this.songName = songName;
         this.songId = songId;
+        this.elapsedSeconds = elapsedSeconds;
     }
 
     public static MusicToClientMessage decode(PacketBuffer buf) {
-        return new MusicToClientMessage(BlockPos.of(buf.readLong()), buf.readUtf(), buf.readInt(), buf.readUtf(), buf.readLong());
+        return new MusicToClientMessage(BlockPos.of(buf.readLong()), buf.readUtf(), buf.readInt(), buf.readUtf(), buf.readLong(), buf.readInt());
     }
 
     public static void encode(MusicToClientMessage message, PacketBuffer buf) {
@@ -37,6 +43,7 @@ public class MusicToClientMessage {
         buf.writeInt(message.timeSecond);
         buf.writeUtf(message.songName);
         buf.writeLong(message.songId);
+        buf.writeInt(message.elapsedSeconds);
     }
 
     public static void handle(MusicToClientMessage message, Supplier<NetworkEvent.Context> contextSupplier) {
@@ -49,6 +56,8 @@ public class MusicToClientMessage {
 
     @OnlyIn(Dist.CLIENT)
     private static void onHandle(MusicToClientMessage message) {
-        MusicPlayManager.play(message.url, message.songName, message.songId, url -> new NetMusicSound(message.pos, url, message.timeSecond));
+        // 播放音乐，从指定进度开始
+        MusicPlayManager.play(message.url, message.songName, message.songId, message.elapsedSeconds,
+            url -> new NetMusicSound(message.pos, url, message.timeSecond, message.elapsedSeconds));
     }
 }
