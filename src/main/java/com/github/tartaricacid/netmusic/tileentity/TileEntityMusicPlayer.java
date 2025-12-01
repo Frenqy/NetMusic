@@ -30,6 +30,9 @@ import java.util.List;
 public class TileEntityMusicPlayer extends TileEntity implements ITickableTileEntity {
     public static final TileEntityType<TileEntityMusicPlayer> TYPE = TileEntityType.Builder.of(TileEntityMusicPlayer::new, InitBlocks.MUSIC_PLAYER.get()).build(null);
 
+    // 缓存当前正在播放的音乐播放器实例（全服只有一个）
+    private static TileEntityMusicPlayer activeInstance = null;
+
     private static final String CD_ITEM_TAG = "ItemStackCD";
     private static final String IS_PLAY_TAG = "IsPlay";
     private static final String CURRENT_TIME_TAG = "CurrentTime";
@@ -42,6 +45,19 @@ public class TileEntityMusicPlayer extends TileEntity implements ITickableTileEn
 
     public TileEntityMusicPlayer() {
         super(TYPE);
+    }
+
+    /**
+     * 获取当前活跃的音乐播放器实例
+     * @return 正在播放的音乐播放器实例，如果没有则返回null
+     */
+    @Nullable
+    public static TileEntityMusicPlayer getActiveInstance() {
+        // 验证缓存的实例是否仍然有效
+        if (activeInstance != null && (activeInstance.isRemoved() || !activeInstance.isPlay())) {
+            activeInstance = null;
+        }
+        return activeInstance;
     }
 
     @Override
@@ -125,6 +141,8 @@ public class TileEntityMusicPlayer extends TileEntity implements ITickableTileEn
     public void setPlayToClient(ItemMusicCD.SongInfo info) {
         this.setCurrentTime(info.songTime * 20 + 64);
         this.isPlay = true;
+        // 更新缓存
+        activeInstance = this;
         if (level != null && !level.isClientSide) {
             MusicToClientMessage msg = new MusicToClientMessage(worldPosition, info.songUrl, info.songTime, info.songName, info.songId);
             // send to all players
@@ -148,6 +166,10 @@ public class TileEntityMusicPlayer extends TileEntity implements ITickableTileEn
         if (playerInvHandler != null) {
             playerInvHandler.invalidate();
             playerInvHandler = null;
+        }
+        // 清除缓存
+        if (activeInstance == this) {
+            activeInstance = null;
         }
     }
 

@@ -11,13 +11,13 @@ import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.SoundCategory;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
+import org.jetbrains.annotations.NotNull;
 
 import java.net.URL;
 
 public class NetMusicSound extends TickableSound implements IUrlSound, ISeekableSound {
     private final URL songUrl;
     private final int tickTimes;
-    private final BlockPos pos;
     private final int startSeconds;
     private int tick;
 
@@ -34,7 +34,6 @@ public class NetMusicSound extends TickableSound implements IUrlSound, ISeekable
         this.tickTimes = timeSecond * 20;
         this.volume = 4.0f;
         this.tick = 0;
-        this.pos = pos;
         this.startSeconds = startSeconds;
     }
 
@@ -59,10 +58,9 @@ public class NetMusicSound extends TickableSound implements IUrlSound, ISeekable
             }
         }
 
-        TileEntity te = world.getBlockEntity(pos);
-        if (te instanceof TileEntityMusicPlayer) {
-            TileEntityMusicPlayer musicPlay = (TileEntityMusicPlayer) te;
-            if (!musicPlay.isPlay()) {
+        TileEntityMusicPlayer te = TileEntityMusicPlayer.getActiveInstance();
+        if (te != null) {
+            if (!te.isPlay()) {
                 this.stop();
             }
         } else {
@@ -78,5 +76,10 @@ public class NetMusicSound extends TickableSound implements IUrlSound, ISeekable
     @Override
     public int getStartSeconds() {
         return startSeconds;
+    }
+
+    @Override
+    public @NotNull AttenuationType getAttenuation() {
+        return AttenuationType.NONE;
     }
 }
