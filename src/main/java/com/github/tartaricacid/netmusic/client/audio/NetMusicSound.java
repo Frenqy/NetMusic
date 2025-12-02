@@ -58,14 +58,14 @@ public class NetMusicSound extends TickableSound implements IUrlSound, ISeekable
             }
         }
 
-        TileEntityMusicPlayer te = TileEntityMusicPlayer.getActiveInstance();
-        if (te != null) {
-            if (!te.isPlay()) {
-                this.stop();
-            }
-        } else {
-            this.stop();
-        }
+//        TileEntityMusicPlayer te = TileEntityMusicPlayer.getActiveInstance();
+//        if (te != null) {
+//            if (!te.isPlay()) {
+//                this.stop();
+//            }
+//        } else {
+//            this.stop();
+//        }
     }
 
     @Override
