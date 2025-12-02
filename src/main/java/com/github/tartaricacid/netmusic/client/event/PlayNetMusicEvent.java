@@ -86,8 +86,8 @@ public class PlayNetMusicEvent {
                     soundSource.setVolume(calculateVolume);
                     // soundSource.linearAttenuation(attenuationDis);
                     soundSource.setLooping(false);
-                    soundSource.setSelfPosition(vector3d);
-                    soundSource.setRelative(relative);
+                    soundSource.setSelfPosition(Vector3d.ZERO);
+                    soundSource.setRelative(true);
                     soundSource.disableAttenuation();
                 });
                 getStream(url, startSeconds).thenAccept((stream) -> entry.execute((source) -> {
