@@ -25,18 +25,21 @@ public class MaidMusicToClientMessage implements CustomPacketPayload {
             ByteBufCodecs.STRING_UTF8, MaidMusicToClientMessage::getUrl,
             ByteBufCodecs.VAR_INT, MaidMusicToClientMessage::getTimeSecond,
             ByteBufCodecs.STRING_UTF8, MaidMusicToClientMessage::getSongName,
+            ByteBufCodecs.VAR_LONG, MaidMusicToClientMessage::getSongId,
             MaidMusicToClientMessage::new);
 
     private final int entityId;
     private final String url;
     private final int timeSecond;
     private final String songName;
+    private final long songId;
 
-    public MaidMusicToClientMessage(int entityId, String url, int timeSecond, String songName) {
+    public MaidMusicToClientMessage(int entityId, String url, int timeSecond, String songName, long songId) {
         this.entityId = entityId;
         this.url = url;
         this.timeSecond = timeSecond;
         this.songName = songName;
+        this.songId = songId;
     }
 
     public static void handle(MaidMusicToClientMessage message, IPayloadContext context) {
@@ -54,7 +57,7 @@ public class MaidMusicToClientMessage implements CustomPacketPayload {
         if (!(entity instanceof EntityMaid maid)) {
             return;
         }
-        MusicPlayManager.play(message.url, message.songName, url -> new MaidNetMusicSound(maid, url, message.timeSecond));
+        MusicPlayManager.play(message.url, message.songName, message.songId, url -> new MaidNetMusicSound(maid, url, message.timeSecond));
     }
 
     public int getEntityId() {
@@ -71,6 +74,10 @@ public class MaidMusicToClientMessage implements CustomPacketPayload {
 
     public String getSongName() {
         return songName;
+    }
+
+    public  long getSongId() {
+        return songId;
     }
 
     @Override

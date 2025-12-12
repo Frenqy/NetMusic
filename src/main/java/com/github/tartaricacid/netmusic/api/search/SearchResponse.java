@@ -38,6 +38,10 @@ public class SearchResponse {
         public String getName() {
             return name;
         }
+
+        public long getId() {
+            return id;
+        }
     }
 
     private static class Result {

@@ -19,7 +19,13 @@ import java.util.concurrent.CompletableFuture;
 
 public class MusicToClientMessage implements CustomPacketPayload {
     public static final CustomPacketPayload.Type<MusicToClientMessage> TYPE = new CustomPacketPayload.Type<>(ResourceLocation.fromNamespaceAndPath(NetMusic.MOD_ID, "music_to_client"));
-    public static final StreamCodec<ByteBuf, MusicToClientMessage> STREAM_CODEC = StreamCodec.composite(BlockPos.STREAM_CODEC, MusicToClientMessage::getPos, ByteBufCodecs.STRING_UTF8, MusicToClientMessage::getUrl, ByteBufCodecs.VAR_INT, MusicToClientMessage::getTimeSecond, ByteBufCodecs.STRING_UTF8, MusicToClientMessage::getSongName, ByteBufCodecs.VAR_LONG, MusicToClientMessage::getSongId, MusicToClientMessage::new);
+    public static final StreamCodec<ByteBuf, MusicToClientMessage> STREAM_CODEC = StreamCodec.composite(
+            BlockPos.STREAM_CODEC, MusicToClientMessage::getPos,
+            ByteBufCodecs.STRING_UTF8, MusicToClientMessage::getUrl,
+            ByteBufCodecs.VAR_INT, MusicToClientMessage::getTimeSecond,
+            ByteBufCodecs.STRING_UTF8, MusicToClientMessage::getSongName,
+            ByteBufCodecs.VAR_LONG, MusicToClientMessage::getSongId,
+            MusicToClientMessage::new);
 
     private final BlockPos pos;
     private final String url;
@@ -63,17 +69,7 @@ public class MusicToClientMessage implements CustomPacketPayload {
 
     @OnlyIn(Dist.CLIENT)
     private static void onHandle(MusicToClientMessage message) {
-        NetMusic.LOGGER.info("Received music play message: pos={}, url={}, timeSecond={}, songName={}, songId={}",
-                message.pos, message.url, message.timeSecond, message.songName, message.songId);
-        String playUrl = message.url;
-        if (message.songId != 0){
-            playUrl = HttpClientUtil.getPlayUrl(String.valueOf(message.songId));
-            NetMusic.LOGGER.info("Resolved play URL from song ID {}: {}", message.songId, playUrl);
-        }
-        if (playUrl == null){
-            playUrl = message.url;
-        }
-        MusicPlayManager.play(playUrl, message.songName, url -> new NetMusicSound(message.pos, url, message.timeSecond));
+        MusicPlayManager.play(message.url, message.songName, message.songId, url -> new NetMusicSound(message.pos, url, message.timeSecond));
     }
 
     @Override
