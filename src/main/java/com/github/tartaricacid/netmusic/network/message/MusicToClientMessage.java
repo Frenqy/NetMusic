@@ -25,6 +25,7 @@ public class MusicToClientMessage implements CustomPacketPayload {
             ByteBufCodecs.VAR_INT, MusicToClientMessage::getTimeSecond,
             ByteBufCodecs.STRING_UTF8, MusicToClientMessage::getSongName,
             ByteBufCodecs.VAR_LONG, MusicToClientMessage::getSongId,
+            ByteBufCodecs.VAR_INT, MusicToClientMessage::getElapsedSeconds,
             MusicToClientMessage::new);
 
     private final BlockPos pos;
@@ -32,13 +33,15 @@ public class MusicToClientMessage implements CustomPacketPayload {
     private final int timeSecond;
     private final String songName;
     private final long songId;
+    private final int elapsedSeconds; // 已播放的秒数
 
-    public MusicToClientMessage(BlockPos pos, String url, int timeSecond, String songName, long songId) {
+    public MusicToClientMessage(BlockPos pos, String url, int timeSecond, String songName, long songId, int elapsedSeconds) {
         this.pos = pos;
         this.url = url;
         this.timeSecond = timeSecond;
         this.songName = songName;
         this.songId = songId;
+        this.elapsedSeconds = elapsedSeconds;
     }
 
     public BlockPos getPos() {
@@ -61,6 +64,10 @@ public class MusicToClientMessage implements CustomPacketPayload {
         return songId;
     }
 
+    public int getElapsedSeconds() {
+        return elapsedSeconds;
+    }
+
     public static void handle(MusicToClientMessage message, IPayloadContext context) {
         if (context.flow().isClientbound()) {
             context.enqueueWork(() -> CompletableFuture.runAsync(() -> onHandle(message), Util.backgroundExecutor()));
@@ -69,7 +76,7 @@ public class MusicToClientMessage implements CustomPacketPayload {
 
     @OnlyIn(Dist.CLIENT)
     private static void onHandle(MusicToClientMessage message) {
-        MusicPlayManager.play(message.url, message.songName, message.songId, url -> new NetMusicSound(message.pos, url, message.timeSecond));
+        MusicPlayManager.play(message.url, message.songName, message.songId, url -> new NetMusicSound(message.pos, url, message.timeSecond, message.elapsedSeconds));
     }
 
     @Override

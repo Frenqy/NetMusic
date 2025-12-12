@@ -45,6 +45,25 @@ public class NetMusicAudioStream implements AudioStream {
         frame = new byte[frameSize];
     }
 
+    public NetMusicAudioStream(URL url, int startSeconds) throws UnsupportedAudioFileException, IOException {
+        this(url);
+        // 计算从指定秒数开始的字节偏移量
+        // 公式: 偏移量 = 采样率 * 通道数 * 位深度/8 * 秒数
+        AudioFormat format = this.stream.getFormat();
+        int bytesPerSecond = (int) (format.getSampleRate() * format.getChannels() * (format.getSampleSizeInBits() / 8));
+        long startOffset = (long) bytesPerSecond * startSeconds;
+
+        // 跳过指定的字节数
+        long skipped = 0;
+        long skip;
+        do {
+            skip = this.stream.skip(startOffset - skipped);
+            if (skip != 0) {
+                skipped += skip;
+            }
+        } while (skipped < startOffset && skip != 0);
+    }
+
     @Override
     public AudioFormat getFormat() {
         return stream.getFormat();

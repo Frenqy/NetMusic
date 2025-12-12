@@ -98,7 +98,7 @@ public class TileEntityMusicPlayer extends BlockEntity {
         this.setCurrentTime(info.songTime * 20 + 64);
         this.isPlay = true;
         if (level != null && !level.isClientSide) {
-            MusicToClientMessage msg = new MusicToClientMessage(worldPosition, info.songUrl, info.songTime, info.songName, info.songId);
+            MusicToClientMessage msg = new MusicToClientMessage(worldPosition, info.songUrl, info.songTime, info.songName, info.songId, 0);
             NetworkHandler.sendToAllClients(msg);
         }
     }

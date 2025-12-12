@@ -25,8 +25,9 @@ public class NetMusicSound extends AbstractTickableSoundInstance {
     private final int tickTimes;
     //private final BlockPos pos;
     private int tick;
+    private int startSeconds;
 
-    public NetMusicSound(BlockPos pos, URL songUrl, int timeSecond) {
+    public NetMusicSound(BlockPos pos, URL songUrl, int timeSecond, int startSeconds) {
         super(InitSounds.NET_MUSIC.get(), SoundSource.RECORDS, SoundInstance.createUnseededRandom());
         this.songUrl = songUrl;
         this.x = 0;
@@ -37,6 +38,7 @@ public class NetMusicSound extends AbstractTickableSoundInstance {
         this.tick = 0;
         this.attenuation = Attenuation.NONE;
         this.relative = true;
+        this.startSeconds = startSeconds;
         //this.pos = pos;
     }
 
@@ -66,7 +68,7 @@ public class NetMusicSound extends AbstractTickableSoundInstance {
     public CompletableFuture<AudioStream> getStream(SoundBufferLibrary soundBuffers, Sound sound, boolean looping) {
         return CompletableFuture.supplyAsync(() -> {
             try {
-                return new NetMusicAudioStream(this.songUrl);
+                return new NetMusicAudioStream(this.songUrl, this.startSeconds);
             } catch (IOException | UnsupportedAudioFileException e) {
                 e.printStackTrace();
             }
