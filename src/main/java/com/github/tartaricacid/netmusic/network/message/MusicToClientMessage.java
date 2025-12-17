@@ -1,7 +1,7 @@
 package com.github.tartaricacid.netmusic.network.message;
 
-import com.coloryr.allmusic.client.core.HttpClientUtil;
 import com.github.tartaricacid.netmusic.NetMusic;
+import com.github.tartaricacid.netmusic.client.audio.ClientMusicPlayerManager;
 import com.github.tartaricacid.netmusic.client.audio.MusicPlayManager;
 import com.github.tartaricacid.netmusic.client.audio.NetMusicSound;
 import io.netty.buffer.ByteBuf;
@@ -76,7 +76,12 @@ public class MusicToClientMessage implements CustomPacketPayload {
 
     @OnlyIn(Dist.CLIENT)
     private static void onHandle(MusicToClientMessage message) {
-        MusicPlayManager.play(message.url, message.songName, message.songId, url -> new NetMusicSound(message.pos, url, message.timeSecond, message.elapsedSeconds));
+        MusicPlayManager.play(message.url, message.songName, message.songId, url -> {
+            NetMusicSound sound = new NetMusicSound(message.pos, url, message.timeSecond, message.elapsedSeconds);
+            // 保存到客户端管理器
+            ClientMusicPlayerManager.setCurrentPlaying(message.pos, message.url, message.songName, message.songId, message.timeSecond, sound);
+            return sound;
+        });
     }
 
     @Override

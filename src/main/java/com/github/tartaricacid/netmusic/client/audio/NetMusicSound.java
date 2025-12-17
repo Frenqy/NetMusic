@@ -1,7 +1,6 @@
 package com.github.tartaricacid.netmusic.client.audio;
 
 import com.github.tartaricacid.netmusic.init.InitSounds;
-import com.github.tartaricacid.netmusic.tileentity.TileEntityMusicPlayer;
 import net.minecraft.Util;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.resources.sounds.AbstractTickableSoundInstance;
@@ -10,10 +9,8 @@ import net.minecraft.client.resources.sounds.SoundInstance;
 import net.minecraft.client.sounds.AudioStream;
 import net.minecraft.client.sounds.SoundBufferLibrary;
 import net.minecraft.core.BlockPos;
-import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.world.level.Level;
-import net.minecraft.world.level.block.entity.BlockEntity;
 
 import javax.sound.sampled.UnsupportedAudioFileException;
 import java.io.IOException;
@@ -23,7 +20,7 @@ import java.util.concurrent.CompletableFuture;
 public class NetMusicSound extends AbstractTickableSoundInstance {
     private final URL songUrl;
     private final int tickTimes;
-    //private final BlockPos pos;
+    private final BlockPos pos;
     private int tick;
     private int startSeconds;
 
@@ -39,7 +36,21 @@ public class NetMusicSound extends AbstractTickableSoundInstance {
         this.attenuation = Attenuation.NONE;
         this.relative = true;
         this.startSeconds = startSeconds;
-        //this.pos = pos;
+        this.pos = pos;
+    }
+
+    /**
+     * 获取已播放的秒数
+     */
+    public int getElapsedSeconds() {
+        return startSeconds + (tick / 20);
+    }
+
+    /**
+     * 获取音乐播放器位置
+     */
+    public BlockPos getPos() {
+        return pos;
     }
 
     @Override
@@ -50,6 +61,8 @@ public class NetMusicSound extends AbstractTickableSoundInstance {
         }
         tick++;
         if (tick > tickTimes + 50) {
+            // 音乐即将停止，清除管理器中的记录
+            ClientMusicPlayerManager.clearCurrentPlaying();
             this.stop();
         }
 
