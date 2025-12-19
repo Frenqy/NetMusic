@@ -19,7 +19,7 @@ apply plugin: 'java'
 
 version = '2.0.0'
 group = 'com.github.tartaricacid'
-archivesBaseName = 'netmusic-1.19.2'
+archivesBaseName = 'netmusic-allmusic-1.19.2'
 
 java.toolchain.languageVersion = JavaLanguageVersion.of(17)
 
