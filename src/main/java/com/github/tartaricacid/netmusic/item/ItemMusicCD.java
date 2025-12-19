@@ -131,12 +131,15 @@ public class ItemMusicCD extends Item {
         public boolean readOnly = false;
         @SerializedName("artists")
         public List<String> artists = Lists.newArrayList();
+        @SerializedName("song_id")
+        public long songId = 0;
 
-        public SongInfo(String songUrl, String songName, int songTime, boolean readOnly) {
+        public SongInfo(String songUrl, String songName, int songTime, boolean readOnly, long songId) {
             this.songUrl = songUrl;
             this.songName = songName;
             this.songTime = songTime;
             this.readOnly = readOnly;
+            this.songId = songId;
         }
 
         public SongInfo(NetEaseMusicSong pojo) {
@@ -148,6 +151,7 @@ public class ItemMusicCD extends Item {
                 this.transName = song.getTransName();
                 this.vip = song.needVip();
                 this.artists = song.getArtists();
+                this.songId = song.getId();
             }
         }
 
@@ -158,6 +162,7 @@ public class ItemMusicCD extends Item {
             this.transName = track.getTransName();
             this.vip = track.needVip();
             this.artists = track.getArtists();
+            this.songId = track.getId();
         }
 
         public SongInfo(CompoundTag tag) {
@@ -177,6 +182,9 @@ public class ItemMusicCD extends Item {
                 ListTag tagList = tag.getList("artists", Tag.TAG_STRING);
                 this.artists = Lists.newArrayList();
                 tagList.forEach(nbt -> this.artists.add(nbt.getAsString()));
+            }
+            if (tag.contains("song_id", Tag.TAG_LONG)) {
+                this.songId = tag.getLong("song_id");
             }
         }
 
@@ -198,6 +206,7 @@ public class ItemMusicCD extends Item {
                 info.artists.forEach(name -> nbt.add(StringTag.valueOf(name)));
                 tag.put("artists", nbt);
             }
+            tag.putLong("song_id", info.songId);
         }
     }
 }
