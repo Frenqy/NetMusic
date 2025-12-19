@@ -5,6 +5,7 @@ import com.github.tartaricacid.netmusic.init.InitItems;
 import com.github.tartaricacid.netmusic.item.ItemMusicCD;
 import com.github.tartaricacid.netmusic.network.NetworkHandler;
 import com.github.tartaricacid.netmusic.network.message.GetMusicListMessage;
+import com.github.tartaricacid.netmusic.network.message.ReloadCookieMessage;
 import com.mojang.brigadier.Command;
 import com.mojang.brigadier.arguments.LongArgumentType;
 import com.mojang.brigadier.builder.LiteralArgumentBuilder;
@@ -24,20 +25,24 @@ public class NetMusicCommand {
     private static final String RELOAD_NAME = "reload";
     private static final String GET_163_NAME = "get163";
     private static final String GET_163_CD_NAME = "get163cd";
+    private static final String COOKIE_NAME = "cookie";
     private static final String SONG_LIST_ID = "song_list_id";
     private static final String SONG_ID = "song_id";
+    private static final String COOKIE = "cookie";
 
     public static LiteralArgumentBuilder<CommandSourceStack> get() {
         LiteralArgumentBuilder<CommandSourceStack> root = Commands.literal(ROOT_NAME);
         LiteralArgumentBuilder<CommandSourceStack> get163List = Commands.literal(GET_163_NAME);
         LiteralArgumentBuilder<CommandSourceStack> get163Song = Commands.literal(GET_163_CD_NAME);
         LiteralArgumentBuilder<CommandSourceStack> reload = Commands.literal(RELOAD_NAME);
+        LiteralArgumentBuilder<CommandSourceStack> cookie = Commands.literal(COOKIE_NAME);
         RequiredArgumentBuilder<CommandSourceStack, Long> songListId = Commands.argument(SONG_LIST_ID, LongArgumentType.longArg());
         RequiredArgumentBuilder<CommandSourceStack, Long> songId = Commands.argument(SONG_ID, LongArgumentType.longArg());
 
         root.then(get163List.then(songListId.executes(NetMusicCommand::getSongList)));
         root.then(get163Song.then(songId.executes(NetMusicCommand::getSong)));
         root.then(reload.executes(NetMusicCommand::reload));
+        root.then(cookie.executes(NetMusicCommand::reloadCookie));
         return root;
     }
 
@@ -86,6 +91,16 @@ public class NetMusicCommand {
         try {
             ServerPlayer serverPlayer = context.getSource().getPlayerOrException();
             NetworkHandler.sendToClientPlayer(new GetMusicListMessage(GetMusicListMessage.RELOAD_MESSAGE), serverPlayer);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return Command.SINGLE_SUCCESS;
+    }
+
+    private static int reloadCookie(CommandContext<CommandSourceStack> context) {
+        try {
+            ServerPlayer serverPlayer = context.getSource().getPlayerOrException();
+            NetworkHandler.sendToClientPlayer(new ReloadCookieMessage(), serverPlayer);
         } catch (Exception e) {
             e.printStackTrace();
         }

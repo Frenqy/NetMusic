@@ -21,6 +21,8 @@
   "command.netmusic.music_cd.add163.fail": "Add NetEase music list fail! Please check if the playlist ID is mistyped?",
   "command.netmusic.music_cd.add163cd.success": "Add NetEase music success!",
   "command.netmusic.music_cd.add163cd.fail": "Add NetEase music fail! Please check if the music ID is mistyped?",
+  "command.netmusic.cookie.reload.success": "Cookie reloaded successfully!",
+  "command.netmusic.cookie.reload.fail": "Cookie reload failed! Please check the cookie file.",
   "gui.netmusic.cd_burner.craft": "Craft CD",
   "gui.netmusic.cd_burner.read_only": "Read Only",
   "gui.netmusic.cd_burner.id.tips": "Enter the song ID",
