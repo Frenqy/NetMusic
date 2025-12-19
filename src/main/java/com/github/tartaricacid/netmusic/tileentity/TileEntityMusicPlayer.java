@@ -23,6 +23,7 @@ import net.minecraftforge.common.capabilities.ForgeCapabilities;
 import net.minecraftforge.common.util.LazyOptional;
 import net.minecraftforge.items.IItemHandler;
 import net.minecraftforge.items.ItemStackHandler;
+import net.minecraftforge.network.PacketDistributor;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
@@ -121,7 +122,9 @@ public class TileEntityMusicPlayer extends BlockEntity {
         this.isPlay = true;
         if (level != null && !level.isClientSide) {
             MusicToClientMessage msg = new MusicToClientMessage(worldPosition, info.songUrl, info.songTime, info.songName, info.songId);
-            NetworkHandler.sendToNearby(level, worldPosition, msg);
+            level.getServer().getPlayerList().getPlayers().forEach(player -> {
+                NetworkHandler.CHANNEL.send(PacketDistributor.PLAYER.with(() -> player), msg);
+            });
         }
     }
 
