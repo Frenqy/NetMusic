@@ -27,10 +27,12 @@ public final class MusicPlayManager {
     }
 
     public static void play(String url, String songName, long songId, int startSeconds, Function<URL, ISound> sound) {
-        long id = songId;
         String vipUrl = null;
-        if (id != 0) {
-            vipUrl = HttpClientUtil.getPlayUrl(String.valueOf(id));
+        if (songId != 0) {
+            vipUrl = HttpClientUtil.getPlayUrl(String.valueOf(songId));
+            if (vipUrl == null){
+                Minecraft.getInstance().gui.getChat().addMessage(new StringTextComponent("§c无法获取VIP音乐的播放地址，请检查Cookie是否有效或音乐是否下架"));
+            }
         }
 
         if (vipUrl != null) {
@@ -67,6 +69,7 @@ public final class MusicPlayManager {
 
             final int finalStartSeconds = startSeconds;
             Minecraft.getInstance().submitAsync(() -> {
+                Minecraft.getInstance().getSoundManager().stop();
                 Minecraft.getInstance().getSoundManager().play(sound.apply(urlFinal));
                 if (startSeconds > 0) {
                     NetMusic.LOGGER.info("从 {} 秒处开始播放音乐: {}", startSeconds, songName);
