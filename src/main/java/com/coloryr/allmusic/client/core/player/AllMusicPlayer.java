@@ -3,9 +3,7 @@ package com.coloryr.allmusic.client.core.player;
 import com.coloryr.allmusic.client.core.AllMusicCore;
 import com.coloryr.allmusic.client.core.player.decoder.BuffPack;
 import com.coloryr.allmusic.client.core.player.decoder.IDecoder;
-import com.coloryr.allmusic.client.core.player.decoder.flac.FlacDecoder;
 import com.coloryr.allmusic.client.core.player.decoder.mp3.Mp3Decoder;
-import com.coloryr.allmusic.client.core.player.decoder.ogg.OggDecoder;
 import org.apache.http.ConnectionClosedException;
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpResponse;
@@ -17,6 +15,7 @@ import org.apache.logging.log4j.core.config.Configurator;
 import org.lwjgl.BufferUtils;
 import org.lwjgl.openal.AL10;
 
+import java.io.BufferedInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.SocketException;
@@ -27,6 +26,10 @@ import java.util.Queue;
 import java.util.concurrent.*;
 
 public class AllMusicPlayer extends InputStream {
+
+    // MP3 max frame size is about 1730 bytes (144 * 384kbit/s / 32000 Hz + 2 Bytes CRC)
+    // Using 4KB buffer for optimal streaming performance with small and large files
+    private static final int BUFFER_SIZE = 4096;
 
     private final Queue<String> urls = new ConcurrentLinkedQueue<>();
     private final Semaphore semaphore = new Semaphore(0);
@@ -122,7 +125,8 @@ public class AllMusicPlayer extends InputStream {
         get.setHeader("Range", "bytes=" + local + "-");
         HttpResponse response = this.client.execute(get);
         HttpEntity entity = response.getEntity();
-        content = entity.getContent();
+        // Use BufferedInputStream for streaming optimization
+        content = new BufferedInputStream(entity.getContent(), BUFFER_SIZE);
     }
 
     private void run() {
@@ -155,20 +159,11 @@ public class AllMusicPlayer extends InputStream {
                     continue;
                 }
 
-                decoder = new FlacDecoder(this);
+                // Only support MP3 format with streaming optimization
+                decoder = new Mp3Decoder(this);
                 if (!decoder.set()) {
-                    local = 0;
-                    connect();
-                    decoder = new OggDecoder(this);
-                    if (!decoder.set()) {
-                        local = 0;
-                        connect();
-                        decoder = new Mp3Decoder(this);
-                        if (!decoder.set()) {
-                            AllMusicCore.bridge.sendMessage("不支持这样的文件播放");
-                            continue;
-                        }
-                    }
+                    AllMusicCore.bridge.sendMessage("不支持的音频格式，仅支持MP3格式");
+                    continue;
                 }
 
                 isPlay = true;
