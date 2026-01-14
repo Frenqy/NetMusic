@@ -23,19 +23,20 @@ import java.util.concurrent.CompletableFuture;
 public class NetMusicSound extends AbstractTickableSoundInstance {
     private final URL songUrl;
     private final int tickTimes;
-    private final BlockPos pos;
     private int tick;
 
     public NetMusicSound(BlockPos pos, URL songUrl, int timeSecond) {
         super(InitSounds.NET_MUSIC.get(), SoundSource.RECORDS, SoundInstance.createUnseededRandom());
         this.songUrl = songUrl;
-        this.x = pos.getX() + 0.5f;
-        this.y = pos.getY() + 0.5f;
-        this.z = pos.getZ() + 0.5f;
+        this.x = 0;
+        this.y = 0;
+        this.z = 0;
         this.tickTimes = timeSecond * 20;
         this.volume = 4.0f;
         this.tick = 0;
-        this.pos = pos;
+
+        this.relative = true;
+        this.attenuation = Attenuation.NONE;
     }
 
     @Override
@@ -46,26 +47,6 @@ public class NetMusicSound extends AbstractTickableSoundInstance {
         }
         tick++;
         if (tick > tickTimes + 50) {
-            this.stop();
-        } else {
-            if (world.getGameTime() % 8 == 0) {
-                for (int i = 0; i < 2; i++) {
-                    world.addParticle(ParticleTypes.NOTE,
-                            x - 0.5f + world.random.nextDouble(),
-                            y + world.random.nextDouble() + 1,
-                            z - 0.5f + world.random.nextDouble(),
-                            world.random.nextGaussian(), world.random.nextGaussian(), world.random.nextInt(3));
-                }
-            }
-        }
-
-        BlockEntity te = world.getBlockEntity(pos);
-        if (te instanceof TileEntityMusicPlayer) {
-            TileEntityMusicPlayer musicPlay = (TileEntityMusicPlayer) te;
-            if (!musicPlay.isPlay()) {
-                this.stop();
-            }
-        } else {
             this.stop();
         }
     }

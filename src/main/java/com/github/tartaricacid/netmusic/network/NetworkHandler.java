@@ -32,6 +32,10 @@ public class NetworkHandler {
         }
     }
 
+    public static void sendToAll(CustomPacketPayload toSend) {
+        PacketDistributor.sendToAllPlayers(toSend);
+    }
+
     public static void sendToServer(CustomPacketPayload message) {
         PacketDistributor.sendToServer(message);
     }

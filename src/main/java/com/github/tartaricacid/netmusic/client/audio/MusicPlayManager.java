@@ -24,6 +24,8 @@ public final class MusicPlayManager {
     private static final String MUSIC_163_URL = "https://music.163.com/";
     private static final String LOCAL_FILE_PROTOCOL = "file";
 
+    private static SoundInstance cacheSoundInstance = null;
+
     public static void play(String url, String songName, long songId, Function<URL, SoundInstance> sound) {
         String vipUrl = null;
         if (songId != 0) {
@@ -63,7 +65,11 @@ public final class MusicPlayManager {
                 }
             }
             Minecraft.getInstance().submitAsync(() -> {
-                Minecraft.getInstance().getSoundManager().play(sound.apply(urlFinal));
+                if (cacheSoundInstance != null) {
+                    Minecraft.getInstance().getSoundManager().stop(cacheSoundInstance);
+                }
+                cacheSoundInstance = sound.apply(urlFinal);
+                Minecraft.getInstance().getSoundManager().play(cacheSoundInstance);
                 Minecraft.getInstance().gui.setNowPlaying(Component.literal(songName));
             });
         } catch (MalformedURLException | URISyntaxException e) {
