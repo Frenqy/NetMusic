@@ -138,7 +138,7 @@ public class ComputerMenuScreen extends AbstractContainerScreen<ComputerMenu> {
         }
         int time = Integer.parseInt(timeText);
         if (URL_HTTP_REG.matcher(urlText).matches()) {
-            ItemMusicCD.SongInfo song = new ItemMusicCD.SongInfo(urlText, nameText, time, this.readOnlyButton.selected());
+            ItemMusicCD.SongInfo song = new ItemMusicCD.SongInfo(urlText, nameText, time, this.readOnlyButton.selected(), 0);
             NetworkHandler.sendToServer(new SetMusicIDMessage(song));
             return;
         }
@@ -150,7 +150,7 @@ public class ComputerMenuScreen extends AbstractContainerScreen<ComputerMenu> {
             }
             try {
                 URL url = file.toURI().toURL();
-                ItemMusicCD.SongInfo song = new ItemMusicCD.SongInfo(url.toString(), nameText, time, this.readOnlyButton.selected());
+                ItemMusicCD.SongInfo song = new ItemMusicCD.SongInfo(url.toString(), nameText, time, this.readOnlyButton.selected(), 0);
                 NetworkHandler.sendToServer(new SetMusicIDMessage(song));
                 return;
             } catch (MalformedURLException e) {

@@ -18,18 +18,20 @@ import java.util.concurrent.CompletableFuture;
 
 public class MusicToClientMessage implements CustomPacketPayload {
     public static final CustomPacketPayload.Type<MusicToClientMessage> TYPE = new CustomPacketPayload.Type<>(ResourceLocation.fromNamespaceAndPath(NetMusic.MOD_ID, "music_to_client"));
-    public static final StreamCodec<ByteBuf, MusicToClientMessage> STREAM_CODEC = StreamCodec.composite(BlockPos.STREAM_CODEC, MusicToClientMessage::getPos, ByteBufCodecs.STRING_UTF8, MusicToClientMessage::getUrl, ByteBufCodecs.VAR_INT, MusicToClientMessage::getTimeSecond, ByteBufCodecs.STRING_UTF8, MusicToClientMessage::getSongName, MusicToClientMessage::new);
+    public static final StreamCodec<ByteBuf, MusicToClientMessage> STREAM_CODEC = StreamCodec.composite(BlockPos.STREAM_CODEC, MusicToClientMessage::getPos, ByteBufCodecs.STRING_UTF8, MusicToClientMessage::getUrl, ByteBufCodecs.VAR_INT, MusicToClientMessage::getTimeSecond, ByteBufCodecs.STRING_UTF8, MusicToClientMessage::getSongName, ByteBufCodecs.VAR_LONG, MusicToClientMessage::getSongId, MusicToClientMessage::new);
 
     private final BlockPos pos;
     private final String url;
     private final int timeSecond;
     private final String songName;
+    private final long songId;
 
-    public MusicToClientMessage(BlockPos pos, String url, int timeSecond, String songName) {
+    public MusicToClientMessage(BlockPos pos, String url, int timeSecond, String songName, long songId) {
         this.pos = pos;
         this.url = url;
         this.timeSecond = timeSecond;
         this.songName = songName;
+        this.songId = songId;
     }
 
     public BlockPos getPos() {
@@ -48,6 +50,10 @@ public class MusicToClientMessage implements CustomPacketPayload {
         return songName;
     }
 
+    public long getSongId() {
+        return songId;
+    }
+
     public static void handle(MusicToClientMessage message, IPayloadContext context) {
         if (context.flow().isClientbound()) {
             context.enqueueWork(() -> CompletableFuture.runAsync(() -> onHandle(message), Util.backgroundExecutor()));
@@ -56,7 +62,7 @@ public class MusicToClientMessage implements CustomPacketPayload {
 
     @OnlyIn(Dist.CLIENT)
     private static void onHandle(MusicToClientMessage message) {
-        MusicPlayManager.play(message.url, message.songName, url -> new NetMusicSound(message.pos, url, message.timeSecond));
+        MusicPlayManager.play(message.url, message.songName, message.songId, url -> new NetMusicSound(message.pos, url, message.timeSecond));
     }
 
     @Override

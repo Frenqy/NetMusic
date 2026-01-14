@@ -54,7 +54,7 @@ public class MaidMusicToClientMessage implements CustomPacketPayload {
         if (!(entity instanceof EntityMaid maid)) {
             return;
         }
-        MusicPlayManager.play(message.url, message.songName, url -> new MaidNetMusicSound(maid, url, message.timeSecond));
+        MusicPlayManager.play(message.url, message.songName, 0, url -> new MaidNetMusicSound(maid, url, message.timeSecond));
     }
 
     public int getEntityId() {
