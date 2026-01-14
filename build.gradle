@@ -134,9 +134,9 @@ dependencies {
     // 目前仅以 neoforge 作为前置
     implementation "net.neoforged:neoforge:${neo_version}"
     // mp3 播放库
-    implementation 'com.googlecode.soundlibs:mp3spi:1.9.5.4'
+    compileOnly 'com.googlecode.soundlibs:mp3spi:1.9.5.4'
     // flac 播放库
-    implementation 'libs:jflac-codec:1.5.3-SNAPSHOT'
+    compileOnly 'libs:jflac-codec:1.5.3-SNAPSHOT'
     // 女仆模组兼容
     implementation 'curse.maven:touhou-little-maid-355044:6596075-sources-6596128'
     // IPN
@@ -147,10 +147,15 @@ dependencies {
     runtimeOnly("mezz.jei:jei-${minecraft_version}-neoforge:${jei_version}")
 
     // mp3 播放库，需要 jarInJar 进去
-    jarJar "com.googlecode.soundlibs:mp3spi:1.9.5.4"
-    jarJar "com.googlecode.soundlibs:jlayer:1.0.1.4"
-    jarJar "com.googlecode.soundlibs:tritonus-share:0.3.7.4"
-    jarJar "libs:jflac-codec:1.5.3-SNAPSHOT"
+    //jarJar "com.googlecode.soundlibs:mp3spi:1.9.5.4"
+    //jarJar "com.googlecode.soundlibs:jlayer:1.0.1.4"
+    //jarJar "com.googlecode.soundlibs:tritonus-share:0.3.7.4"
+    //jarJar "libs:jflac-codec:1.5.3-SNAPSHOT"
+    implementation 'com.squareup.okhttp3:okhttp:4.12.0'
+    jarJar (group: 'com.squareup.okhttp3', name: 'okhttp', version: '[4.12, 5.0)')
+    jarJar (group: 'com.squareup.okio', name: 'okio-jvm', version: '[3.6, 4.0)') {
+        jarJar.pin(it, '3.9.0')
+    }
 }
 
 // 启用 jarJar
