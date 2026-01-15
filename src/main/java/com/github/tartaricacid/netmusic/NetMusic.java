@@ -75,7 +75,7 @@ public class NetMusic implements AllMusicBridge {
 
     public static void loadConfig() {
         try {
-            File cookieFile = new File(configDir, "cookie.json");
+            File cookieFile = new File(configDir, "netmusic_cookie.json");
 
             InputStreamReader reader = new InputStreamReader(Files.newInputStream(cookieFile.toPath()),
                     StandardCharsets.UTF_8);
@@ -88,15 +88,19 @@ public class NetMusic implements AllMusicBridge {
                 cookie = new ArrayList<>();
                 saveCookie();
             }
+        } catch (IOException e) {
+            LOGGER.warn("§d[AllMusic3]§c未找到配置文件，已生成默认配置文件");
+            cookie = new ArrayList<>();
+            saveCookie();
         } catch (Exception e) {
-            // log.warning("§d[AllMusic3]§c读取配置文件错误");
+            LOGGER.warn("§d[AllMusic3]§c读取配置文件错误");
             e.printStackTrace();
         }
     }
 
     public static void saveCookie() {
         try {
-            File cookieFile = new File(configDir, "cookie.json");
+            File cookieFile = new File(configDir, "netmusic_cookie.json");
             String data = new GsonBuilder().setPrettyPrinting().create().toJson(cookie);
             FileOutputStream out = new FileOutputStream(cookieFile);
             OutputStreamWriter write = new OutputStreamWriter(
@@ -104,7 +108,7 @@ public class NetMusic implements AllMusicBridge {
             write.write(data);
             write.close();
         } catch (Exception e) {
-            // log.warning("§d[AllMusic3]§c配置文件保存错误");
+            LOGGER.warn("§d[AllMusic3]§c配置文件保存错误");
             e.printStackTrace();
         }
     }
