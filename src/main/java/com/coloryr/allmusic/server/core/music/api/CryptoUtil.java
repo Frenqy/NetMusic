@@ -1,7 +1,6 @@
-package com.coloryr.allmusic.client.core;
+package com.coloryr.allmusic.server.core.music.api;
 
-import com.coloryr.allmusic.client.core.objs.api.EncResObj;
-import com.github.tartaricacid.netmusic.NetMusic;
+import com.coloryr.allmusic.server.core.objs.api.EncResObj;
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
 

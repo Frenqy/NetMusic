@@ -23,7 +23,7 @@ public class ClientNetMusicCommand {
 
     private static int loadCookie(CommandContext<CommandSourceStack> context) {
         try {
-            NetMusic.loadRawCookie();
+            NetMusic.loadConfig();
             context.getSource().sendSuccess(() -> Component.translatable("command.netmusic.cookie.reload.success"), false);
         } catch (Exception e) {
             e.printStackTrace();

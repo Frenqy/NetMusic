@@ -2,8 +2,8 @@ package com.github.tartaricacid.netmusic;
 
 import com.coloryr.allmusic.client.core.AllMusicBridge;
 import com.coloryr.allmusic.client.core.AllMusicCore;
-import com.coloryr.allmusic.client.core.HttpClientUtil;
-import com.coloryr.allmusic.client.core.objs.CookieObj;
+import com.coloryr.allmusic.server.core.music.api.HttpClientUtil;
+import com.coloryr.allmusic.server.core.objs.CookieObj;
 import com.github.tartaricacid.netmusic.api.NetEaseMusic;
 import com.github.tartaricacid.netmusic.api.WebApi;
 import com.github.tartaricacid.netmusic.config.GeneralConfig;
@@ -11,6 +11,7 @@ import com.github.tartaricacid.netmusic.init.*;
 import com.github.tartaricacid.netmusic.network.NetworkHandler;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
+import com.google.gson.reflect.TypeToken;
 import net.minecraft.client.Minecraft;
 import net.minecraft.network.chat.Component;
 import net.minecraft.sounds.SoundSource;
@@ -24,26 +25,28 @@ import net.neoforged.fml.loading.FMLLoader;
 import net.neoforged.fml.loading.FMLPaths;
 import net.neoforged.neoforge.client.event.ClientPlayerNetworkEvent;
 import net.neoforged.neoforge.client.event.ClientTickEvent;
-import net.neoforged.neoforge.client.event.sound.SoundEvent;
+import net.neoforged.neoforge.client.event.sound.PlaySoundSourceEvent;
 import net.neoforged.neoforge.common.NeoForge;
-import okhttp3.Cookie;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import java.io.*;
+import java.lang.reflect.Type;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 @Mod(NetMusic.MOD_ID)
 public class NetMusic implements AllMusicBridge {
     public static final String MOD_ID = "netmusic";
     public static final Logger LOGGER = LogManager.getLogger(MOD_ID);
+    public static final Gson gson = new Gson();
     public static WebApi NET_EASE_WEB_API;
 
-    public static CookieObj cookie;
+    public static List<CookieObj> cookie;
     private static File configDir;
 
     public NetMusic(IEventBus modEventBus, ModContainer modContainer) {
@@ -64,7 +67,6 @@ public class NetMusic implements AllMusicBridge {
         NeoForge.EVENT_BUS.register(this);
 
         configDir = FMLPaths.CONFIGDIR.get().toFile();
-        loadRawCookie();
         loadConfig();
 
         InitAllMusicCore();
@@ -73,16 +75,17 @@ public class NetMusic implements AllMusicBridge {
 
     public static void loadConfig() {
         try {
-            File cookieFile = new File(configDir, "netmusic_cookie.json");
+            File cookieFile = new File(configDir, "cookie.json");
 
             InputStreamReader reader = new InputStreamReader(Files.newInputStream(cookieFile.toPath()),
                     StandardCharsets.UTF_8);
             BufferedReader bf = new BufferedReader(reader);
-            cookie = new Gson().fromJson(bf, CookieObj.class);
+            Type listType = new TypeToken<ArrayList<CookieObj>>(){}.getType();
+            cookie = new Gson().fromJson(bf, listType);
             bf.close();
             reader.close();
-            if (cookie == null || cookie.cookieStore == null) {
-                cookie = new CookieObj();
+            if (cookie == null) {
+                cookie = new ArrayList<>();
                 saveCookie();
             }
         } catch (Exception e) {
@@ -91,66 +94,9 @@ public class NetMusic implements AllMusicBridge {
         }
     }
 
-    public static void loadRawCookie() {
-        File cookieFile = new File(configDir, "netmusic_raw_cookie.txt");
-        String cookieStr = "";
-        try {
-            InputStreamReader reader = new InputStreamReader(Files.newInputStream(cookieFile.toPath()),
-                    StandardCharsets.UTF_8);
-            BufferedReader bf = new BufferedReader(reader);
-            String line;
-            while ((line = bf.readLine()) != null) {
-                cookieStr += line;
-            }
-            bf.close();
-            reader.close();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-
-        if (!cookieStr.isEmpty()) {
-            String[] cookies = cookieStr.split(";");
-            Map<String, Cookie> list1 = new HashMap<>();
-            for (String item : cookies) {
-                String[] cookieitem = item.split("=");
-                if (cookieitem.length == 1) {
-                    if (list1.containsKey(cookieitem[0].trim())) {
-                        continue;
-                    }
-                    list1.put(cookieitem[0].trim(), new Cookie.Builder()
-                            .name(cookieitem[0].trim())
-                            .domain("163.com")
-                            .expiresAt(Long.MAX_VALUE)
-                            .build());
-                } else {
-                    list1.put(cookieitem[0].trim(), new Cookie.Builder()
-                            .name(cookieitem[0].trim())
-                            .value(cookieitem[1].trim())
-                            .domain("163.com")
-                            .expiresAt(Long.MAX_VALUE)
-                            .build());
-                }
-            }
-            cookie = new CookieObj();
-            cookie.cookieStore.put("music.163.com", new ArrayList<>(list1.values()));
-            saveCookie();
-
-            // clear raw cookie file content
-            try {
-                FileOutputStream out = new FileOutputStream(cookieFile);
-                OutputStreamWriter write = new OutputStreamWriter(
-                        out, StandardCharsets.UTF_8);
-                write.write("");
-                write.close();
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
-        }
-    }
-
     public static void saveCookie() {
         try {
-            File cookieFile = new File(configDir, "netmusic_cookie.json");
+            File cookieFile = new File(configDir, "cookie.json");
             String data = new GsonBuilder().setPrettyPrinting().create().toJson(cookie);
             FileOutputStream out = new FileOutputStream(cookieFile);
             OutputStreamWriter write = new OutputStreamWriter(
@@ -166,7 +112,9 @@ public class NetMusic implements AllMusicBridge {
     @Override
     public void sendMessage(String data) {
         Minecraft.getInstance().execute(() -> {
-            Minecraft.getInstance().gui.getChat().addMessage(Component.literal(data));
+            if (Minecraft.getInstance().player == null)
+                return;
+            Minecraft.getInstance().player.sendSystemMessage(Component.literal(data));
         });
     }
 
@@ -182,7 +130,7 @@ public class NetMusic implements AllMusicBridge {
     }
 
     @SubscribeEvent
-    public void onSound(final SoundEvent.SoundSourceEvent e) {
+    public void onSound(final PlaySoundSourceEvent e) {
         if (!AllMusicCore.isPlay()) return;
         SoundSource data = e.getSound().getSource();
         switch (data) {

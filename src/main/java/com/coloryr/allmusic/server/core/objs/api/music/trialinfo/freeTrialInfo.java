@@ -1,4 +1,4 @@
-package com.coloryr.allmusic.client.core.objs.api.music.trialinfo;
+package com.coloryr.allmusic.server.core.objs.api.music.trialinfo;
 
 public class freeTrialInfo {
     private long start;

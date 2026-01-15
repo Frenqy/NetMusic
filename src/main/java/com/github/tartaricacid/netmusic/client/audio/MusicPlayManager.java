@@ -1,7 +1,7 @@
 package com.github.tartaricacid.netmusic.client.audio;
 
 import com.coloryr.allmusic.client.core.AllMusicCore;
-import com.coloryr.allmusic.client.core.HttpClientUtil;
+import com.coloryr.allmusic.server.core.music.api.HttpClientUtil;
 import com.github.tartaricacid.netmusic.NetMusic;
 import com.github.tartaricacid.netmusic.api.NetWorker;
 import net.minecraft.ChatFormatting;

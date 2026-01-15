@@ -3,19 +3,22 @@ package com.coloryr.allmusic.client.core.player;
 import com.coloryr.allmusic.client.core.AllMusicCore;
 import com.coloryr.allmusic.client.core.player.decoder.BuffPack;
 import com.coloryr.allmusic.client.core.player.decoder.IDecoder;
+import com.coloryr.allmusic.client.core.player.decoder.flac.FlacDecoder;
 import com.coloryr.allmusic.client.core.player.decoder.mp3.Mp3Decoder;
-import org.apache.http.ConnectionClosedException;
-import org.apache.http.HttpEntity;
-import org.apache.http.HttpResponse;
-import org.apache.http.StatusLine;
-import org.apache.http.client.HttpClient;
-import org.apache.http.client.methods.HttpGet;
-import org.apache.http.impl.client.HttpClientBuilder;
-import org.apache.logging.log4j.core.config.Configurator;
+import com.coloryr.allmusic.client.core.player.decoder.ogg.OggDecoder;
+import org.apache.hc.client5.http.classic.methods.HttpGet;
+import org.apache.hc.client5.http.impl.classic.CloseableHttpClient;
+import org.apache.hc.client5.http.impl.classic.CloseableHttpResponse;
+import org.apache.hc.client5.http.impl.classic.HttpClients;
+import org.apache.hc.core5.http.Header;
+import org.apache.hc.core5.http.HttpEntity;
+import org.apache.hc.core5.http.ParseException;
+import org.apache.hc.core5.http.io.entity.EntityUtils;
+
+import java.net.SocketTimeoutException;
 import org.lwjgl.BufferUtils;
 import org.lwjgl.openal.AL10;
 
-import java.io.BufferedInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.SocketException;
@@ -27,17 +30,14 @@ import java.util.concurrent.*;
 
 public class AllMusicPlayer extends InputStream {
 
-    // MP3 max frame size is about 1730 bytes (144 * 384kbit/s / 32000 Hz + 2 Bytes CRC)
-    // Using 4KB buffer for optimal streaming performance with small and large files
-    private static final int BUFFER_SIZE = 4096;
-
     private final Queue<String> urls = new ConcurrentLinkedQueue<>();
     private final Semaphore semaphore = new Semaphore(0);
     private final Semaphore semaphore1 = new Semaphore(0);
     private final Queue<ByteBuffer> queue = new ConcurrentLinkedQueue<>();
-    private HttpClient client;
+    private CloseableHttpClient client;
     private String url;
-    private HttpGet get;
+    private HttpGet request;
+    private CloseableHttpResponse response;
     private InputStream content;
     private boolean isClose = false;
     private boolean reload = false;
@@ -53,14 +53,9 @@ public class AllMusicPlayer extends InputStream {
 
     public AllMusicPlayer(IntBuffer source) {
         try {
-            Configurator.setLevel("org.apache.http", org.apache.logging.log4j.Level.WARN);
-            Configurator.setLevel("org.apache.http.wire", org.apache.logging.log4j.Level.WARN);
-
             this.source = source;
             new Thread(this::run, "allmusic_run").start();
-            client = HttpClientBuilder.create()
-                    .useSystemProperties()
-                    .build();
+            client = HttpClients.createDefault();
             ScheduledExecutorService service = Executors.newSingleThreadScheduledExecutor();
             service.scheduleAtFixedRate(this::run1, 0, 10, TimeUnit.MILLISECONDS);
         } catch (Exception e) {
@@ -82,13 +77,17 @@ public class AllMusicPlayer extends InputStream {
         if (url.contains("https://music.163.com/song/media/outer/url?id=")
                 || url.contains("http://music.163.com/song/media/outer/url?id=")) {
             try {
-                HttpGet get = new HttpGet(url);
-                get.setHeader("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/84.0.4147.105 Safari/537.36 Edg/84.0.522.52");
-                get.setHeader("Host", "music.163.com");
-                HttpResponse response = client.execute(get);
-                StatusLine line = response.getStatusLine();
-                if (line.getStatusCode() == 302) {
-                    return response.getFirstHeader("Location").getValue();
+                HttpGet request = new HttpGet(url);
+                request.setHeader("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/84.0.4147.105 Safari/537.36 Edg/84.0.522.52");
+                request.setHeader("Host", "music.163.com");
+                try (CloseableHttpResponse response = client.execute(request)) {
+                    int statusCode = response.getCode();
+                    if (statusCode == 302) {
+                        Header locationHeader = response.getFirstHeader("Location");
+                        if (locationHeader != null) {
+                            return locationHeader.getValue();
+                        }
+                    }
                 }
                 return url;
             } catch (Exception e) {
@@ -120,13 +119,19 @@ public class AllMusicPlayer extends InputStream {
     public void connect() throws IOException {
         getClose();
         streamClose();
-        get = new HttpGet(url);
-        get.setHeader("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/84.0.4147.105 Safari/537.36 Edg/84.0.522.52");
-        get.setHeader("Range", "bytes=" + local + "-");
-        HttpResponse response = this.client.execute(get);
+        request = new HttpGet(url);
+        request.setHeader("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/84.0.4147.105 Safari/537.36 Edg/84.0.522.52");
+        request.setHeader("Range", "bytes=" + local + "-");
+        response = client.execute(request);
+        int statusCode = response.getCode();
+        if (statusCode < 200 || statusCode >= 300) {
+            throw new IOException("Unexpected code " + statusCode);
+        }
         HttpEntity entity = response.getEntity();
-        // Use BufferedInputStream for streaming optimization
-        content = new BufferedInputStream(entity.getContent(), BUFFER_SIZE);
+        if (entity == null) {
+            throw new IOException("Response entity is null");
+        }
+        content = entity.getContent();
     }
 
     private void run() {
@@ -159,11 +164,20 @@ public class AllMusicPlayer extends InputStream {
                     continue;
                 }
 
-                // Only support MP3 format with streaming optimization
-                decoder = new Mp3Decoder(this);
+                decoder = new FlacDecoder(this);
                 if (!decoder.set()) {
-                    AllMusicCore.bridge.sendMessage("不支持的音频格式，仅支持MP3格式");
-                    continue;
+                    local = 0;
+                    connect();
+                    decoder = new OggDecoder(this);
+                    if (!decoder.set()) {
+                        local = 0;
+                        connect();
+                        decoder = new Mp3Decoder(this);
+                        if (!decoder.set()) {
+                            AllMusicCore.bridge.sendMessage("不支持这样的文件播放");
+                            continue;
+                        }
+                    }
                 }
 
                 isPlay = true;
@@ -290,10 +304,16 @@ public class AllMusicPlayer extends InputStream {
     }
 
     private void getClose() {
-        if (get != null && !get.isAborted()) {
-            get.abort();
-            get = null;
+        // Close the HTTP response if it exists
+        if (response != null) {
+            try {
+                response.close();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+            response = null;
         }
+        request = null;
     }
 
     private void streamClose() throws IOException {
@@ -326,7 +346,7 @@ public class AllMusicPlayer extends InputStream {
             int temp = content.read(buf, off, len);
             local += temp;
             return temp;
-        } catch (ConnectionClosedException | SocketException ex) {
+        } catch (SocketTimeoutException | SocketException ex) {
             connect();
             return read(buf, off, len);
         }
