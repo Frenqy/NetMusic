@@ -16,6 +16,8 @@ import org.apache.hc.core5.http.ParseException;
 import org.apache.hc.core5.http.io.entity.EntityUtils;
 
 import java.net.SocketTimeoutException;
+
+import org.apache.logging.log4j.core.config.Configurator;
 import org.lwjgl.BufferUtils;
 import org.lwjgl.openal.AL10;
 
@@ -53,6 +55,9 @@ public class AllMusicPlayer extends InputStream {
 
     public AllMusicPlayer(IntBuffer source) {
         try {
+            Configurator.setLevel("org.apache.http", org.apache.logging.log4j.Level.WARN);
+            Configurator.setLevel("org.apache.http.wire", org.apache.logging.log4j.Level.WARN);
+
             this.source = source;
             new Thread(this::run, "allmusic_run").start();
             client = HttpClients.createDefault();
