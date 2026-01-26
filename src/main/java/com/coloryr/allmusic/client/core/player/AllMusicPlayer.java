@@ -15,6 +15,7 @@ import org.apache.hc.core5.http.HttpEntity;
 import org.apache.hc.core5.http.ParseException;
 import org.apache.hc.core5.http.io.entity.EntityUtils;
 
+import java.io.BufferedInputStream;
 import java.net.SocketTimeoutException;
 
 import org.apache.logging.log4j.core.config.Configurator;
@@ -40,7 +41,7 @@ public class AllMusicPlayer extends InputStream {
     private String url;
     private HttpGet request;
     private CloseableHttpResponse response;
-    private InputStream content;
+    private BufferedInputStream content;
     private boolean isClose = false;
     private boolean reload = false;
     private IDecoder decoder;
@@ -55,8 +56,7 @@ public class AllMusicPlayer extends InputStream {
 
     public AllMusicPlayer(IntBuffer source) {
         try {
-            Configurator.setLevel("org.apache.http", org.apache.logging.log4j.Level.WARN);
-            Configurator.setLevel("org.apache.http.wire", org.apache.logging.log4j.Level.WARN);
+            Configurator.setLevel("org.apache.hc.client5.http", org.apache.logging.log4j.Level.WARN);
 
             this.source = source;
             new Thread(this::run, "allmusic_run").start();
@@ -136,7 +136,7 @@ public class AllMusicPlayer extends InputStream {
         if (entity == null) {
             throw new IOException("Response entity is null");
         }
-        content = entity.getContent();
+        content = new BufferedInputStream(entity.getContent());
     }
 
     private void run() {
@@ -169,20 +169,24 @@ public class AllMusicPlayer extends InputStream {
                     continue;
                 }
 
-                decoder = new FlacDecoder(this);
-                if (!decoder.set()) {
-                    local = 0;
-                    connect();
+                byte[] head = new byte[4];
+                content.mark(4);
+                content.read(head);
+                content.reset();
+
+                if (head[0] == 'f' && head[1] == 'L' && head[2] == 'a' && head[3] == 'C') {
+                    decoder = new FlacDecoder(this);
+                } else if (head[0] == 'I' && head[1] == 'D' && head[2] == '3') {
+                    decoder = new Mp3Decoder(this);
+                } else if (head[0] == (byte) 0xFF && head[1] == (byte) 0xFB) {
+                    decoder = new Mp3Decoder(this);
+                } else {
                     decoder = new OggDecoder(this);
-                    if (!decoder.set()) {
-                        local = 0;
-                        connect();
-                        decoder = new Mp3Decoder(this);
-                        if (!decoder.set()) {
-                            AllMusicCore.bridge.sendMessage("不支持这样的文件播放");
-                            continue;
-                        }
-                    }
+                }
+
+                if (!decoder.set()) {
+                    AllMusicCore.bridge.sendMessage("不支持这样的文件播放");
+                    continue;
                 }
 
                 isPlay = true;
@@ -211,11 +215,7 @@ public class AllMusicPlayer extends InputStream {
                                     .put(output.buff, 0, output.len);
                             ((Buffer) byteBuffer).flip();
                             queue.add(byteBuffer);
-
-                            AL10.alSourcef(index, AL10.AL_GAIN, AllMusicCore.bridge.getVolume());
                         }
-
-                        AL10.alSourcef(index, AL10.AL_GAIN, AllMusicCore.bridge.getVolume());
 
                         if (AL10.alGetSourcei(index, AL10.AL_BUFFERS_PROCESSED) > 0) {
                             int temp = AL10.alSourceUnqueueBuffers(index);
@@ -234,7 +234,6 @@ public class AllMusicPlayer extends InputStream {
                 streamClose();
                 decodeClose();
                 while (!isClose && AL10.alGetSourcei(index, AL10.AL_SOURCE_STATE) == AL10.AL_PLAYING) {
-                    AL10.alSourcef(index, AL10.AL_GAIN, AllMusicCore.bridge.getVolume());
                     Thread.sleep(50);
                 }
                 if (!reload) {
@@ -270,8 +269,10 @@ public class AllMusicPlayer extends InputStream {
             wait = false;
             semaphore1.release();
         }
+
+        AL10.alSourcef(index, AL10.AL_GAIN, AllMusicCore.bridge.getVolume());
+
         if (isClose) {
-            queue.clear();
             return;
         }
         while (!queue.isEmpty()) {
