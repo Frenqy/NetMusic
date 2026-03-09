@@ -12,6 +12,7 @@ import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.protocol.Packet;
 import net.minecraft.network.protocol.game.ClientGamePacketListener;
 import net.minecraft.network.protocol.game.ClientboundBlockEntityDataPacket;
+import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.entity.BlockEntity;
@@ -22,12 +23,17 @@ import net.minecraftforge.common.util.LazyOptional;
 import net.minecraftforge.items.CapabilityItemHandler;
 import net.minecraftforge.items.IItemHandler;
 import net.minecraftforge.items.ItemStackHandler;
+import net.minecraftforge.items.CapabilityItemHandler;
+
+import java.util.ArrayList;
+import java.util.List;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
 public class TileEntityMusicPlayer extends BlockEntity {
-    public static final BlockEntityType<TileEntityMusicPlayer> TYPE = BlockEntityType.Builder.of(TileEntityMusicPlayer::new, InitBlocks.MUSIC_PLAYER.get()).build(null);
+    public static final BlockEntityType<TileEntityMusicPlayer> TYPE = BlockEntityType.Builder
+            .of(TileEntityMusicPlayer::new, InitBlocks.MUSIC_PLAYER.get()).build(null);
 
     private static final String CD_ITEM_TAG = "ItemStackCD";
     private static final String IS_PLAY_TAG = "IsPlay";
@@ -118,7 +124,8 @@ public class TileEntityMusicPlayer extends BlockEntity {
         this.setCurrentTime(info.songTime * 20 + 64);
         this.isPlay = true;
         if (level != null && !level.isClientSide) {
-            MusicToClientMessage msg = new MusicToClientMessage(worldPosition, info.songUrl, info.songTime, info.songName);
+            MusicToClientMessage msg = new MusicToClientMessage(worldPosition, info.songUrl, info.songTime,
+                    info.songName);
             NetworkHandler.sendToNearby(level, worldPosition, msg);
         }
     }
@@ -167,6 +174,50 @@ public class TileEntityMusicPlayer extends BlockEntity {
         if (0 < te.getCurrentTime() && te.getCurrentTime() < 16 && te.getCurrentTime() % 5 == 0) {
             te.setPlay(false);
             te.markDirty();
+
+            // push item to down block
+            BlockEntity blockEntityDown = te.getLevel().getBlockEntity(te.getBlockPos().below());
+            if (blockEntityDown != null) {
+                blockEntityDown.getCapability(CapabilityItemHandler.ITEM_HANDLER_CAPABILITY).ifPresent(handler -> {
+                    ItemStack stack = te.getPlayerInv().extractItem(0, 1, false);
+                    if (!stack.isEmpty()) {
+                        handler.insertItem(0, stack, false);
+                    }
+                });
+            }
+
+            // pull item from top block
+            BlockEntity blockEntityTop = te.getLevel().getBlockEntity(te.getBlockPos().above());
+            if (blockEntityTop != null) {
+                blockEntityTop.getCapability(CapabilityItemHandler.ITEM_HANDLER_CAPABILITY).ifPresent(handler -> {
+                    // find all slots with item
+                    List<Integer> slots = new java.util.ArrayList<>();
+                    for (int i = 0; i < handler.getSlots(); i++) {
+                        ItemStack stack = handler.getStackInSlot(i);
+                        if (!stack.isEmpty() && stack.getItem() instanceof ItemMusicCD) {
+                            slots.add(i);
+                        }
+                    }
+                    // extract item from random slot
+                    if (!slots.isEmpty()) {
+                        // get random slot
+                        int slot = slots.get(level.random.nextInt(slots.size()));
+                        ItemStack stack = handler.extractItem(slot, 1, false);
+                        if (!stack.isEmpty()) {
+                            te.getPlayerInv().insertItem(0, stack, false);
+                        }
+                    }
+                });
+            }
+
+            ItemStack stackInSlot = te.getPlayerInv().getStackInSlot(0);
+            if (stackInSlot.isEmpty()) {
+                return;
+            }
+            ItemMusicCD.SongInfo songInfo = ItemMusicCD.getSongInfo(stackInSlot);
+            if (songInfo != null) {
+                te.setPlayToClient(songInfo);
+            }
         }
     }
 }
